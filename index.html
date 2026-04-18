@@ -46,7 +46,10 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;min-
 .ni.active{color:var(--acc);background:rgba(99,85,232,.1);border-left-color:var(--acc);}
 .ni-dot{width:5px;height:5px;border-radius:50%;background:var(--mt);flex-shrink:0;}
 .ni.active .ni-dot{background:var(--acc);}
-.sb-foot{padding:10px 12px;border-top:1px solid var(--brd);font-size:10px;color:var(--mt);}
+/* FIX 1: sb-foot always visible with sign out prominent */
+.sb-foot{padding:10px 12px;border-top:1px solid var(--brd);font-size:10px;color:var(--mt);display:flex;flex-direction:column;gap:6px;}
+.sb-signout{width:100%;padding:7px 11px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--brd);background:rgba(248,113,113,.1);color:var(--r);font-family:'DM Sans',sans-serif;transition:all .15s;}
+.sb-signout:hover{background:rgba(248,113,113,.2);border-color:var(--r);}
 
 /* MAIN */
 .mn{flex:1;display:flex;flex-direction:column;overflow:hidden;}
@@ -199,6 +202,11 @@ tr:hover td{background:rgba(99,85,232,.04);}
 #toast.show{opacity:1;transform:translateY(0);}
 #toast.success{background:var(--g);color:#000;}
 
+/* FIX 4: Shift confirm modal */
+#shift-confirm-mo .mo{max-width:380px;}
+.shift-confirm-info{background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.7;}
+.shift-confirm-info strong{color:var(--acc);}
+
 @media(max-width:768px){
   .sb{display:none;}.mob-nav{display:block;}
   .app{flex-direction:column;}.mn{height:calc(100vh - 48px);}
@@ -224,7 +232,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
   <div class="sb-logo">
     <div>
       <div class="sb-title">📺 TJ_NewsRoom_Manager</div>
-      <div style="font-size:9px;color:var(--mt);">v4.0 · Supabase</div>
+      <div style="font-size:9px;color:var(--mt);">v4.1 · Supabase</div>
     </div>
     <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">[NIGHT]</button>
   </div>
@@ -242,9 +250,11 @@ tr:hover td{background:rgba(99,85,232,.04);}
     <div class="ni" onclick="gp('departments',this)"><div class="ni-dot"></div>Departments</div>
     <div class="ni" onclick="gp('holidays',this)"><div class="ni-dot"></div>Holidays</div>
   </nav>
+  <!-- FIX 1: Sign Out button always visible at bottom of sidebar -->
   <div class="sb-foot">
     <div id="db-status"><div class="db-dot loading" id="db-dot"></div><span id="db-label">Connecting...</span></div>
-    <div id="save-status" style="margin-top:4px;">✓ Saved</div>
+    <div id="save-status">✓ Saved</div>
+    <button class="sb-signout" onclick="signOut()">⏻ Sign Out</button>
   </div>
 </div>
 
@@ -282,12 +292,14 @@ tr:hover td{background:rgba(99,85,232,.04);}
 
 <!-- ── LEAVES ── -->
 <div class="pg" id="pg-leaves">
-  <div class="sh"><div class="st">Leave Tracker</div>
-    <div style="display:flex;gap:6px;">
-      <select id="lv-filter-mbr" style="width:160px;" onchange="rLeaves()"><option value="">All Members</option></select>
-      <button class="btn bta bts" onclick="om('applyLvMo')">+ Apply Leave</button>
-    </div>
+<div class="sh"><div class="st">Leave Tracker</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <!-- FIX 3: Year dropdown populated by JS in init() -->
+    <select id="lv-yr-filter" style="width:100px;" onchange="rLeaves()"></select>
+    <select id="lv-filter-mbr" style="width:160px;" onchange="rLeaves()"><option value="">All Members</option></select>
+    <button class="btn bta bts" onclick="om('applyLvMo')">+ Apply Leave</button>
   </div>
+</div>
   <div class="lv-tracker" id="lv-summary-cards"></div>
   <div class="g2">
     <div class="card">
@@ -465,32 +477,57 @@ tr:hover td{background:rgba(99,85,232,.04);}
   </div>
 </div></div>
 
-<script>
-// ════════════════════════════════════════
-// ▶ SUPABASE CONFIG — Replace with your credentials
-// ════════════════════════════════════════
+<!-- FIX 4: Shift Change Confirmation Modal -->
+<div class="mo-ov" id="shift-confirm-mo"><div class="mo" style="max-width:380px;">
+  <div class="mo-t">Confirm Shift Change <span class="mo-x" onclick="cancelShiftChange()">×</span></div>
+  <div class="shift-confirm-info" id="shift-confirm-info"></div>
+  <div class="fg"><label class="fl">Remarks (optional)</label><input type="text" id="shift-confirm-remarks" placeholder="e.g. swap, emergency, etc."></div>
+  <div class="mo-ac">
+    <button class="btn" onclick="cancelShiftChange()">Cancel</button>
+    <button class="btn bta" onclick="confirmShiftChange()">✓ Confirm &amp; Save</button>
+  </div>
+</div></div>
 
+<script>
+
+// ════════════════════════════════════════
+// ▶ SUPABASE CONFIG
+// ════════════════════════════════════════
 const SUPABASE_URL      = "%%SUPABASE_URL%%"
 const SUPABASE_ANON_KEY = "%%SUPABASE_ANON_KEY%%";
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (!session) window.location.href = 'login.html';
+});
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+});
+async function signOut() {
+  await sb.auth.signOut();
+  window.location.href = 'login.html';
+}
+
 // ════════════════════════════════════════
 // APP STATE
 // ════════════════════════════════════════
 const COLS=['#7c6fff','#4ade80','#fbbf24','#f87171','#60a5fa','#2dd4bf','#ff6b6b','#a78bfa','#34d399','#fb923c','#38bdf8','#e879f9','#facc15','#f472b6','#818cf8','#6ee7b7'];
 
-let depts   = [];   // [{id, name, color_hex}]
-let members = [];   // [{employee_id, full_name, role, department_id, default_shift, phone, email, pf_number, esi_number, date_of_join, ...balances}]
-let att     = {};   // {date: {employee_id: {shift, remarks}}}
-let leaves  = [];   // leave_applications rows
-let holidays= [];   // [{date, name}]  — stored in localStorage only (not in DB schema)
+let depts   = [];
+let members = [];
+let att     = {};
+let leaves  = [];
+let holidays= [];
 
 const today    = new Date();
 const todayStr = today.toISOString().split('T')[0];
 let wkStart = gwStart(new Date());
 let calY = today.getFullYear(), calM = today.getMonth();
+
+// FIX 4: Pending shift change state
+let pendingShift = null; // {empId, ds, newVal, oldVal, sel}
 
 const SOPTS=[
   {v:'',lbl:'- Select -',cls:'sem'},{v:'1ST',lbl:'1ST SHIFT',cls:'s1'},{v:'2ND',lbl:'2ND SHIFT',cls:'s2n'},
@@ -506,11 +543,10 @@ const sCls={_:'sem','1ST':'s1','2ND':'s2n','NIGHT':'sn','GEN':'sg2','MN':'smn','
 // ════════════════════════════════════════
 function gwStart(d){const r=new Date(d);r.setDate(r.getDate()-r.getDay());r.setHours(0,0,0,0);return r;}
 function aD(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
-// AFTER (timezone-safe)
 function fd(d){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
 function fs(d){return('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+String(d.getFullYear()).slice(2);}
@@ -524,11 +560,6 @@ function dById(id){return depts.find(d=>d.id===id);}
 function inits(n){return(n||'').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();}
 function mc(m){const idx=members.indexOf(m);return COLS[idx%COLS.length];}
 
-function cntL(empId,type){
-  let c=0;
-  Object.values(att).forEach(d=>{if(d[empId]?.shift===type)c++;});
-  return c;
-}
 function getAttPct(empId){
   const ym=todayStr.slice(0,7);
   const [y,mo]=ym.split('-').map(Number);
@@ -565,95 +596,56 @@ function showToast(msg,type='error'){
 // ════════════════════════════════════════
 async function loadAllFromSupabase(){
   setLoadingText('Loading departments...');
-
-  // 1. DEPARTMENTS
   const {data:dData,error:dErr}=await sb.from('departments').select('*').order('name');
-  if(dErr){throw new Error('Departments: '+dErr.message);}
-  depts=dData.map(d=>({
-    id:d.id,
-    name:d.name,
-    color:d.color_hex||'#7c6fff',
-    created_at:d.created_at
-  }));
+  if(dErr) throw new Error('Departments: '+dErr.message);
+  depts=dData.map(d=>({id:d.id,name:d.name,color:d.color_hex||'#7c6fff',created_at:d.created_at}));
 
-  // 2. TEAM MEMBERS
   setLoadingText('Loading team members...');
   const {data:mData,error:mErr}=await sb.from('team_members').select('*').order('full_name');
-  if(mErr){throw new Error('Members: '+mErr.message);}
+  if(mErr) throw new Error('Members: '+mErr.message);
 
-  // 3. LEAVE BALANCES (current year)
   setLoadingText('Loading leave balances...');
   const yr=new Date().getFullYear();
   const {data:lbData,error:lbErr}=await sb.from('leave_balances').select('*').eq('year',yr);
-  if(lbErr){throw new Error('Leave balances: '+lbErr.message);}
+  if(lbErr) throw new Error('Leave balances: '+lbErr.message);
 
-  // Build members array merging balance data
   const balMap={};
   (lbData||[]).forEach(b=>{balMap[b.employee_id]=b;});
 
   members=mData.map(m=>{
     const bal=balMap[m.employee_id]||{};
     return {
-      // Identity
-      employee_id: m.employee_id,
-      full_name:   m.full_name,
-      role:        m.role,
-      department_id: m.department_id,
-      default_shift: m.default_shift,
-      phone:       m.phone||'',
-      email:       m.email||'',
-      pf_number:   m.pf_number||'',
-      esi_number:  m.esi_number||'',
-      date_of_join:m.date_of_join||'',
-      is_active:   m.is_active,
-      // Leave balances
-      cl_entitled: bal.cl_entitled??8,
-      sl_entitled: bal.sl_entitled??6,
-      pl_entitled: bal.pl_entitled??10,
-      cl_used:     bal.cl_used??0,
-      sl_used:     bal.sl_used??0,
-      pl_used:     bal.pl_used??0,
-      comp_off_earned: bal.comp_off_earned??0,
-      comp_off_used:   bal.comp_off_used??0,
-      lop_days:        bal.lop_days??0,
+      employee_id:m.employee_id, full_name:m.full_name, role:m.role,
+      department_id:m.department_id, default_shift:m.default_shift,
+      phone:m.phone||'', email:m.email||'', pf_number:m.pf_number||'',
+      esi_number:m.esi_number||'', date_of_join:m.date_of_join||'', is_active:m.is_active,
+      cl_entitled:bal.cl_entitled??8, sl_entitled:bal.sl_entitled??6, pl_entitled:bal.pl_entitled??10,
+      cl_used:bal.cl_used??0, sl_used:bal.sl_used??0, pl_used:bal.pl_used??0,
+      comp_off_earned:bal.comp_off_earned??0, comp_off_used:bal.comp_off_used??0, lop_days:bal.lop_days??0,
     };
   });
 
-  // 4. SHIFT ENTRIES
   setLoadingText('Loading shift entries...');
   const {data:sData,error:sErr}=await sb.from('shift_entries').select('*');
-  if(sErr){throw new Error('Shifts: '+sErr.message);}
-
+  if(sErr) throw new Error('Shifts: '+sErr.message);
   att={};
   (sData||[]).forEach(s=>{
     if(!att[s.shift_date])att[s.shift_date]={};
     att[s.shift_date][s.employee_id]={shift:s.shift_code,remarks:s.remarks||'',db_id:s.id};
   });
 
-  // 5. LEAVE APPLICATIONS
   setLoadingText('Loading leave applications...');
   const {data:laData,error:laErr}=await sb.from('leave_applications').select('*').order('applied_at',{ascending:false});
-  if(laErr){throw new Error('Leave apps: '+laErr.message);}
-
+  if(laErr) throw new Error('Leave apps: '+laErr.message);
   leaves=(laData||[]).map(l=>({
-    id:         l.id,
-    employee_id:l.employee_id,
-    leave_type: l.leave_type,
-    from_date:  l.from_date,
-    to_date:    l.to_date,
-    total_days: l.total_days,
-    reason:     l.reason||'',
-    status:     l.status,
-    applied_at: l.applied_at,
+    id:l.id, employee_id:l.employee_id, leave_type:l.leave_type,
+    from_date:l.from_date, to_date:l.to_date, total_days:l.total_days,
+    reason:l.reason||'', status:l.status, applied_at:l.applied_at,
   }));
 
-  // 6. HOLIDAYS (from localStorage — not in DB schema)
   const savedHols=localStorage.getItem('tj_holidays');
-  if(savedHols){
-    try{holidays=JSON.parse(savedHols);}catch(e){holidays=defaultHolidays();}
-  }else{
-    holidays=defaultHolidays();
-  }
+  if(savedHols){try{holidays=JSON.parse(savedHols);}catch(e){holidays=defaultHolidays();}}
+  else{holidays=defaultHolidays();}
 }
 
 function defaultHolidays(){
@@ -670,11 +662,9 @@ function defaultHolidays(){
 // ════════════════════════════════════════
 // ▶ SUPABASE WRITE HELPERS
 // ════════════════════════════════════════
-
-// Upsert a single shift entry
-async function upsertShift(employee_id, shift_date, shift_code, remarks=''){
+async function upsertShift(employee_id,shift_date,shift_code,remarks=''){
   const {error}=await sb.from('shift_entries').upsert(
-    {employee_id, shift_date, shift_code, remarks},
+    {employee_id,shift_date,shift_code,remarks},
     {onConflict:'employee_id,shift_date'}
   );
   if(error){showToast('Shift save failed: '+error.message);return false;}
@@ -682,8 +672,7 @@ async function upsertShift(employee_id, shift_date, shift_code, remarks=''){
   return true;
 }
 
-// Insert leave application
-async function insertLeaveApp(employee_id, leave_type, from_date, to_date, reason){
+async function insertLeaveApp(employee_id,leave_type,from_date,to_date,reason){
   const {data,error}=await sb.from('leave_applications')
     .insert({employee_id,leave_type,from_date,to_date,reason,status:'Pending'})
     .select().single();
@@ -691,18 +680,15 @@ async function insertLeaveApp(employee_id, leave_type, from_date, to_date, reaso
   return data;
 }
 
-// Update leave application status
-async function updateLeaveStatus(id, status){
+async function updateLeaveStatus(id,status){
   const {error}=await sb.from('leave_applications')
-    .update({status, actioned_at:new Date().toISOString()})
-    .eq('id',id);
+    .update({status,actioned_at:new Date().toISOString()}).eq('id',id);
   if(error){showToast('Status update failed: '+error.message);return false;}
   showSS('✓ Saved');
   return true;
 }
 
-// Insert or update team member
-async function upsertMember(data, isNew){
+async function upsertMember(data,isNew){
   if(isNew){
     const {error}=await sb.from('team_members').insert(data);
     if(error){showToast('Save failed: '+error.message);return false;}
@@ -715,7 +701,6 @@ async function upsertMember(data, isNew){
   return true;
 }
 
-// Delete team member
 async function deleteMember(employee_id){
   const {error}=await sb.from('team_members').delete().eq('employee_id',employee_id);
   if(error){showToast('Delete failed: '+error.message);return false;}
@@ -730,8 +715,22 @@ function setLoadingText(msg){
   if(el)el.textContent=msg;
 }
 
+// FIX 3: Populate year dropdown for leave tracker
+function populateLeaveYearFilter(){
+  const sel=document.getElementById('lv-yr-filter');
+  if(!sel)return;
+  const currYear=new Date().getFullYear();
+  sel.innerHTML='';
+  for(let y=currYear-2;y<=currYear+2;y++){
+    const opt=document.createElement('option');
+    opt.value=y;
+    opt.textContent=y;
+    if(y===currYear)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
 async function init(){
-  // Theme
   const savedTheme=localStorage.getItem('tj_nrm_theme')||'dark';
   document.documentElement.setAttribute('data-theme',savedTheme);
   document.getElementById('theme-toggle-btn').textContent=savedTheme==='dark'?'[NIGHT]':'☀️';
@@ -740,14 +739,25 @@ async function init(){
   document.getElementById('ma-dt').value=todayStr;
   document.getElementById('mis-mo').value=todayStr.slice(0,7);
 
+  // FIX 3: Populate year dropdown before data loads
+  populateLeaveYearFilter();
+
   setDbStatus('loading','Connecting...');
 
   try{
     await loadAllFromSupabase();
     setDbStatus('ok','Connected ✓');
     document.getElementById('loading-overlay').classList.add('hidden');
+    // FIX 2: All renders happen after data is fully loaded
     popSelects();
-    rDash();rShift();rLeaves();rTeam();rDept();rHols();rCal();genMIS();
+    rDash();
+    rShift();
+    rLeaves();
+    rTeam();
+    rDept();
+    rHols();
+    rCal();
+    genMIS();
   }catch(err){
     setDbStatus('err','Error');
     document.getElementById('loading-text').textContent='⚠ '+err.message+' — Check your Supabase URL & key';
@@ -807,7 +817,7 @@ function donutSVG(segments,size=80,stroke=14){
 }
 
 // ════════════════════════════════════════
-// DASHBOARD
+// DASHBOARD  (FIX 2: always reads from loaded `att` state)
 // ════════════════════════════════════════
 function rDash(){
   const a=att[todayStr]||{};
@@ -910,7 +920,8 @@ function rShift(){
           if(isH)return`<td style="text-align:center;background:rgba(45,212,191,.08);border:1px solid var(--brd);"><span style="font-size:10px;color:var(--tl);font-weight:600;">HOL</span></td>`;
           const val=gv(m.employee_id,ds),cls=sCls[val]||'sem';
           const opts=SOPTS.map(o=>`<option value="${o.v}" ${val===o.v?'selected':''}>${o.lbl}</option>`).join('');
-          return`<td style="padding:2px 3px;border:1px solid var(--brd);"><select class="ss-sel ${cls}" onchange="setCell('${m.employee_id}','${ds}',this)">${opts}</select></td>`;
+          // FIX 4: onchange now asks for confirmation
+          return`<td style="padding:2px 3px;border:1px solid var(--brd);"><select class="ss-sel ${cls}" onchange="requestShiftChange('${m.employee_id}','${ds}',this)">${opts}</select></td>`;
         }).join('')}
       </tr>`;
     });
@@ -919,21 +930,77 @@ function rShift(){
   document.getElementById('shift-tbl-wrap').innerHTML=h;
 }
 
-async function setCell(empId,ds,sel){
-  const v=sel.value;
-  // Update local state immediately
-  if(!att[ds])att[ds]={};
-  if(!att[ds][empId])att[ds][empId]={};
-  att[ds][empId].shift=v;
-  sel.className='ss-sel '+(sCls[v]||'sem');
+// ════════════════════════════════════════
+// FIX 4: SHIFT CHANGE CONFIRMATION FLOW
+// ════════════════════════════════════════
+function requestShiftChange(empId, ds, sel){
+  const newVal = sel.value;
+  const oldVal = att[ds]?.[empId]?.shift || '';
+
+  // Store pending change
+  pendingShift = {empId, ds, newVal, oldVal, sel};
+
+  const m = mByEid(empId);
+  const mName = m ? m.full_name : empId;
+
+  // Build date label
+  const dateObj = new Date(ds + 'T00:00:00');
+  const dateLbl = dateObj.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'short', year:'numeric'});
+
+  const newLbl = SOPTS.find(o=>o.v===newVal)?.lbl || newVal || '(Clear)';
+  const oldLbl = oldVal ? (SOPTS.find(o=>o.v===oldVal)?.lbl || oldVal) : 'Not set';
+
+  document.getElementById('shift-confirm-info').innerHTML =
+    `<div><strong>${mName}</strong></div>
+     <div style="margin-top:5px;">📅 <strong>${dateLbl}</strong></div>
+     <div style="margin-top:5px; color:var(--mt);">Current: <span style="color:var(--am);">${oldLbl}</span></div>
+     <div style="margin-top:3px;">Change to: <strong style="color:var(--acc);">${newLbl}</strong></div>`;
+
+  document.getElementById('shift-confirm-remarks').value = '';
+  om('shift-confirm-mo');
+}
+
+async function confirmShiftChange(){
+  if(!pendingShift) return;
+  const {empId, ds, newVal, sel} = pendingShift;
+  const remarks = document.getElementById('shift-confirm-remarks').value.trim();
+
+  cm('shift-confirm-mo');
+
+  // Update local state
+  if(!att[ds]) att[ds]={};
+  if(!att[ds][empId]) att[ds][empId]={};
+  att[ds][empId].shift = newVal;
+  att[ds][empId].remarks = remarks;
+
+  // Update cell style
+  sel.className = 'ss-sel ' + (sCls[newVal] || 'sem');
+
   rDash();
-  // Persist to Supabase
-  const ok=await upsertShift(empId,ds,v,'');
+
+  // Persist
+  const ok = await upsertShift(empId, ds, newVal, remarks);
   if(!ok){
     // Revert on failure
-    att[ds][empId].shift='';
-    sel.className='ss-sel sem';
+    const oldVal = pendingShift.oldVal;
+    att[ds][empId].shift = oldVal;
+    sel.value = oldVal;
+    sel.className = 'ss-sel ' + (sCls[oldVal] || 'sem');
+    rDash();
   }
+
+  pendingShift = null;
+}
+
+function cancelShiftChange(){
+  if(pendingShift){
+    // Revert the select element visually
+    const {oldVal, sel} = pendingShift;
+    sel.value = oldVal;
+    sel.className = 'ss-sel ' + (sCls[oldVal] || 'sem');
+    pendingShift = null;
+  }
+  cm('shift-confirm-mo');
 }
 
 // ════════════════════════════════════════
@@ -1055,7 +1122,6 @@ async function rejLv(id){
   if(ok){const l=leaves.find(x=>x.id===id);if(l)l.status='Rejected';rLeaves();}
 }
 
-// Balance preview
 document.addEventListener('change',e=>{
   if(e.target.id==='lv-mbr'||e.target.id==='lv-type'){
     const empId=document.getElementById('lv-mbr')?.value;
@@ -1141,16 +1207,13 @@ function viewMbr(empId){
       </div>
       <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:${pctColor};">${attPct}%</div><div style="font-size:9px;color:var(--mt);">Attendance</div></div>
     </div>
-
     <div style="display:flex;gap:6px;margin-bottom:12px;">
       <button class="btn bts" onclick="cm('viewMo');openEditMo('${empId}')">✏ Edit</button>
       <button class="btn bts btr" onclick="cm('viewMo');confirmDel('${empId}','${m.full_name}')">🗑 Delete</button>
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       ${[['Emp ID',m.employee_id],['Default Shift',m.default_shift],['Date of Joining',m.date_of_join||'-'],['Phone',m.phone||'-'],['Email',m.email||'-'],['PF No.',m.pf_number||'-'],['ESI No.',m.esi_number||'-'],['Status',m.is_active?'Active':'Inactive']].map(([k,v])=>`<div style="background:var(--s2);border-radius:7px;padding:8px;"><div style="font-size:9px;color:var(--mt);margin-bottom:2px;">${k}</div><div style="font-size:12px;font-weight:500;">${v}</div></div>`).join('')}
     </div>
-
     <div style="font-size:11px;font-weight:600;margin-bottom:8px;">Leave Balance</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px;">
       ${[
@@ -1161,7 +1224,6 @@ function viewMbr(empId){
         ['LOP',uL,'Used','var(--r)']
       ].map(([l,v,tot,col])=>`<div style="background:var(--s2);border-radius:7px;padding:8px;text-align:center;"><div style="font-size:9px;color:var(--mt);">${l}</div><div style="font-size:18px;font-weight:600;color:${col};">${v}</div><div style="font-size:9px;color:var(--mt);">of ${tot}</div></div>`).join('')}
     </div>
-
     <div style="font-size:11px;font-weight:600;margin-bottom:7px;">Leave History (${mLeaves.length})</div>
     ${mLeaves.length?`<div style="overflow-x:auto;"><table><thead><tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr></thead><tbody>
       ${mLeaves.map(l=>{const sc={Pending:'bam',Approved:'bg',Rejected:'br'}[l.status];return`<tr><td><span class="bdg bpu">${l.leave_type}</span></td><td>${l.from_date}</td><td>${l.to_date}</td><td style="text-align:center;">${l.total_days}</td><td><span class="bdg ${sc}">${l.status}</span></td></tr>`;}).join('')}
@@ -1222,7 +1284,7 @@ function openEditMo(empId){
     document.getElementById('editMo-title').innerHTML=`Edit: ${m.full_name} <span class="mo-x" onclick="cm('editMo')">×</span>`;
     document.getElementById('em-nm').value=m.full_name||'';
     document.getElementById('em-eid').value=m.employee_id||'';
-    document.getElementById('em-eid').disabled=true; // can't change PK
+    document.getElementById('em-eid').disabled=true;
     document.getElementById('em-dept').value=m.department_id||'';
     document.getElementById('em-rl').value=m.role||'';
     document.getElementById('em-ph').value=m.phone||'';
@@ -1308,7 +1370,7 @@ function rDept(){
 }
 
 // ════════════════════════════════════════
-// HOLIDAYS (localStorage only)
+// HOLIDAYS
 // ════════════════════════════════════════
 function saveHolidays(){localStorage.setItem('tj_holidays',JSON.stringify(holidays));}
 
@@ -1348,7 +1410,7 @@ function rCal(){
 }
 
 // ════════════════════════════════════════
-// PUBLISH (WhatsApp text)
+// PUBLISH
 // ════════════════════════════════════════
 function omPublish(){om('publishMo');setTimeout(genPubText,150);}
 function genPubText(){
