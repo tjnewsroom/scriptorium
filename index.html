@@ -6,6 +6,7 @@
 <title>TJ_NewsRoom_Manager v4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ── THEME ── */
 [data-theme="dark"]{
@@ -283,8 +284,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
       <button class="btn bts" onclick="wkNav(-1)">‹ Prev</button>
       <span id="wk-lbl" style="font-size:11px;font-weight:600;min-width:180px;text-align:center;"></span>
       <button class="btn bts" onclick="wkNav(1)">Next ›</button>
-      <button class="btn bts" onclick="wkToday()">Today</button>
-      <button class="btn bts" style="background:#25d36622;border-color:#25d366;color:#25d366;" onclick="omPublish()">📤 Publish</button>
+<button class="btn bts" style="background:#25d36622;border-color:#25d366;color:#25d366;" onclick="captureAndShare()" id="share-img-btn">📸 Share Image</button>
     </div>
   </div>
   <div class="ss-wrap" id="shift-tbl-wrap"></div>
@@ -534,7 +534,7 @@ const SOPTS=[
   {v:'NIGHT',lbl:'NIGHT',cls:'sn'},{v:'GEN',lbl:'GENERAL',cls:'sg2'},{v:'MN',lbl:'MORN/NOON',cls:'smn'},
   {v:'OFF',lbl:'OFF',cls:'sof'},{v:'COMP_HOL',lbl:'COMP(H)',cls:'scf'},{v:'COMP_WEEK',lbl:'COMP(W)',cls:'scf'},
   {v:'CL',lbl:'CL',cls:'scl'},{v:'SL',lbl:'SL',cls:'ssl'},{v:'PL',lbl:'PL',cls:'sel2'},
-  {v:'LOP',lbl:'LOP',cls:'slop'},{v:'HOL',lbl:'HOL',cls:'shol'},
+  {v:'LOP',lbl:'LOP',cls:'slop'},{v:'HOL',lbl:'HOL',cls:'shol'},{v:'SWAP',lbl:'SWAPREQUESTED',cls:'sswap'},
 ];
 const sCls={_:'sem','1ST':'s1','2ND':'s2n','NIGHT':'sn','GEN':'sg2','MN':'smn','OFF':'sof','COMP_HOL':'scf','COMP_WEEK':'scf','CL':'scl','SL':'ssl','PL':'sel2','LOP':'slop','HOL':'shol'};
 
@@ -1445,6 +1445,196 @@ function genPubText(){
 function copyPubText(){
   const ta=document.getElementById('pub-text-output');ta.select();document.execCommand('copy');
   const btn=document.getElementById('copy-pub-btn');btn.textContent='✅ Copied!';setTimeout(()=>{btn.textContent='📋 Copy Text';},2000);
+}
+
+// ════════════════════════════════════════
+// SHIFT PAGE — CAPTURE & SHARE AS IMAGE
+// ════════════════════════════════════════
+async function captureAndShare() {
+  const btn = document.getElementById('share-img-btn');
+  btn.textContent = '⏳ Capturing...';
+  btn.disabled = true;
+
+  try {
+    // Build a clean self-contained div to screenshot
+    const days = Array.from({length:7}, (_,i) => aD(wkStart, i));
+    const dn = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    // Colors based on theme
+    const bgColor    = isDark ? '#0f0f13' : '#f4f5f8';
+    const surfColor  = isDark ? '#1a1a22' : '#ffffff';
+    const brdColor   = isDark ? '#2e2e3e' : '#e0e2ea';
+    const txtColor   = isDark ? '#f0f0f8' : '#1a1a2e';
+    const mtColor    = isDark ? '#8888aa' : '#6b6b8a';
+    const s2Color    = isDark ? '#22222e' : '#f0f1f5';
+    const accColor   = '#7c6fff';
+
+    // Shift color map
+    const shiftColors = {
+      '1ST'      : {bg:'#fbbf2420', color:'#d97706'},
+      '2ND'      : {bg:'#60a5fa20', color:'#2563eb'},
+      'NIGHT'    : {bg:'#7c6fff20', color:'#6355e8'},
+      'GEN'      : {bg:'#2dd4bf20', color:'#0d9488'},
+      'MN'       : {bg:'#34d39920', color:'#16a34a'},
+      'OFF'      : {bg:'#f8717135', color:'#dc2626'},
+      'COMP_HOL' : {bg:'#818cf820', color:'#6366f1'},
+      'COMP_WEEK': {bg:'#818cf820', color:'#6366f1'},
+      'CL'       : {bg:'#fb923c20', color:'#ea580c'},
+      'SL'       : {bg:'#f472b620', color:'#db2777'},
+      'PL'       : {bg:'#fbbf2420', color:'#d97706'},
+      'LOP'      : {bg:'#f8717145', color:'#dc2626'},
+      'HOL'      : {bg:'#2dd4bf20', color:'#0d9488'},
+      ''         : {bg:'transparent', color: mtColor},
+    };
+
+    // Build HTML for screenshot
+    let tableHtml = `
+      <table style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;">
+        <thead>
+          <tr>
+            <th style="background:${s2Color};padding:8px;text-align:left;font-size:11px;font-weight:600;color:${mtColor};border:1px solid ${brdColor};min-width:140px;">NAME</th>
+            ${days.map((d,i) => {
+              const ds = fd(d);
+              const isT = ds === todayStr;
+              const isH = isHol(ds);
+              const hn  = holidays.find(x => x.date === ds);
+              const bg  = isT ? 'rgba(99,85,232,.15)' : isH ? 'rgba(45,212,191,.08)' : s2Color;
+              const col = isT ? accColor : isH ? '#2dd4bf' : mtColor;
+              return `<th style="background:${bg};padding:8px;text-align:center;font-size:10px;font-weight:700;color:${col};border:1px solid ${brdColor};min-width:80px;">
+                <div>${dn[i]}</div>
+                <div style="font-weight:400;">${fs(d)}</div>
+                ${hn ? `<div style="font-size:9px;color:#2dd4bf;">${hn.name}</div>` : ''}
+              </th>`;
+            }).join('')}
+          </tr>
+        </thead>
+        <tbody>`;
+
+    depts.forEach(d => {
+      const dm = members.filter(m => m.department_id === d.id);
+      if (!dm.length) return;
+
+      tableHtml += `
+        <tr>
+          <td colspan="8" style="background:${d.color}18;color:${d.color};font-size:11px;font-weight:700;padding:6px 12px;border:1px solid ${brdColor};">
+            ${d.name.toUpperCase()}
+          </td>
+        </tr>`;
+
+      dm.forEach(m => {
+        const c = mc(m);
+        tableHtml += `<tr>
+          <td style="padding:6px 10px;border:1px solid ${brdColor};font-size:11px;font-weight:600;color:${txtColor};">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:22px;height:22px;border-radius:50%;background:${c}22;color:${c};display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;">${inits(m.full_name)}</div>
+              ${m.full_name}
+            </div>
+          </td>
+          ${days.map(d2 => {
+            const ds  = fd(d2);
+            const isH = isHol(ds);
+            if (isH) return `<td style="text-align:center;background:rgba(45,212,191,.08);border:1px solid ${brdColor};font-size:10px;font-weight:700;color:#2dd4bf;">HOL</td>`;
+            const val = gv(m.employee_id, ds);
+            const sc  = shiftColors[val] || shiftColors[''];
+            return `<td style="text-align:center;background:${sc.bg};border:1px solid ${brdColor};font-size:11px;font-weight:700;color:${sc.color};">${val || '-'}</td>`;
+          }).join('')}
+        </tr>`;
+      });
+    });
+
+    tableHtml += `</tbody></table>`;
+
+    // Wrap in full container
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+      position:fixed;
+      top:-9999px;
+      left:-9999px;
+      background:${bgColor};
+      padding:20px;
+      width:900px;
+      font-family:'DM Sans',sans-serif;
+    `;
+
+    wrapper.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:${accColor};">📺 TJ_NewsRoom_Manager</div>
+          <div style="font-size:11px;color:${mtColor};margin-top:2px;">Weekly Shift Planner</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:600;color:${txtColor};">
+            Week: ${fs(days[0])} — ${fs(days[6])}
+          </div>
+          <div style="font-size:10px;color:${mtColor};margin-top:2px;">
+            Generated: ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+          </div>
+        </div>
+      </div>
+      <div style="overflow:hidden;border-radius:8px;border:1px solid ${brdColor};">
+        ${tableHtml}
+      </div>
+      <div style="margin-top:10px;font-size:9px;color:${mtColor};text-align:center;">
+        TJ NewsRoom Manager · Confidential
+      </div>
+    `;
+
+    document.body.appendChild(wrapper);
+
+    // Capture
+    const canvas = await html2canvas(wrapper, {
+      backgroundColor: bgColor,
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+
+    document.body.removeChild(wrapper);
+
+    // Convert to blob
+    canvas.toBlob(async (blob) => {
+      const fileName = `TJ_Shifts_${fs(days[0]).replace(/\//g,'-')}_to_${fs(days[6]).replace(/\//g,'-')}.png`;
+      const file = new File([blob], fileName, {type: 'image/png'});
+
+      // Try Web Share API first (mobile)
+      if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+        try {
+          await navigator.share({
+            title: 'TJ NewsRoom — Shift Plan',
+            text: `Week: ${fs(days[0])} to ${fs(days[6])}`,
+            files: [file],
+          });
+          showToast('Shared successfully!', 'success');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            // Share failed, fallback to download
+            downloadImage(canvas, fileName);
+          }
+        }
+      } else {
+        // Desktop — just download
+        downloadImage(canvas, fileName);
+        showToast('Image downloaded! Share it manually.', 'success');
+      }
+
+      btn.textContent = '📸 Share Image';
+      btn.disabled = false;
+    }, 'image/png');
+
+  } catch (err) {
+    console.error('Capture failed:', err);
+    showToast('Capture failed: ' + err.message);
+    btn.textContent = '📸 Share Image';
+    btn.disabled = false;
+  }
+}
+
+function downloadImage(canvas, fileName) {
+  const link = document.createElement('a');
+  link.download = fileName;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 // ════════════════════════════════════════
