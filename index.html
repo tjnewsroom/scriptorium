@@ -262,8 +262,8 @@ tr:hover td{background:rgba(99,85,232,.04);}
   <div class="tb-title" id="page-title">Dashboard</div>
   <div style="display:flex;gap:6px;align-items:center;">
     <span id="tdlbl" style="font-size:10px;color:var(--mt);"></span>
-    <button class="btn bta bts" onclick="om('markMo')">+ Attendance</button>
-    <button class="btn bts" onclick="openEditMo(null)">+ Member</button>
+    <!--button class="btn bta bts" onclick="om('markMo')">+ Attendance</button-->
+    <!--button class="btn bts" onclick="openEditMo(null)">+ Member</button-->
   </div>
 </div>
 <div class="ct">
@@ -352,6 +352,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
 <!-- ── DEPARTMENTS ── -->
 <div class="pg" id="pg-departments">
   <div class="sh"><div class="st">Departments</div></div>
+    <input type="text" id="department-search" placeholder="Search..." style="width:140px;" oninput="rTeam()">
     <button class="btn bta bts" onclick="om('addDeptMo')">+ Add Department</button>
   <div id="dept-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;"></div>
 </div>
@@ -496,6 +497,8 @@ tr:hover td{background:rgba(99,85,232,.04);}
 const SUPABASE_URL      = "%%SUPABASE_URL%%"
 const SUPABASE_ANON_KEY = "%%SUPABASE_ANON_KEY%%";
 
+
+
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -535,7 +538,7 @@ const SOPTS=[
   {v:'NIGHT',lbl:'NIGHT',cls:'sn'},{v:'GEN',lbl:'GENERAL',cls:'sg2'},{v:'MN',lbl:'MORN/NOON',cls:'smn'},
   {v:'OFF',lbl:'OFF',cls:'sof'},{v:'COMP_HOL',lbl:'COMP(H)',cls:'scf'},{v:'COMP_WEEK',lbl:'COMP(W)',cls:'scf'},
   {v:'CL',lbl:'CL',cls:'scl'},{v:'SL',lbl:'SL',cls:'ssl'},{v:'PL',lbl:'PL',cls:'sel2'},
-  {v:'LOP',lbl:'LOP',cls:'slop'},{v:'HOL',lbl:'HOL',cls:'shol'},{v:'SWAP_OFF',lbl:'OFFREQUESTED',cls:'sswap'}
+  {v:'LOP',lbl:'LOP',cls:'slop'},{v:'HOL',lbl:'HOL',cls:'shol'},{v:'SWAP_OFF',lbl:'OFFREQUESTED',cls:'sswap'},{v:'1STSHIFTREQUESTED',lbl:'1STSHIFTREQUESTED',cls:'sswap'},{v:'2NDSHIFTREQUESTED',lbl:'2NDSHIFTREQUESTED',cls:'sswap'}
 ];
 const sCls={_:'sem','1ST':'s1','2ND':'s2n','NIGHT':'sn','GEN':'sg2','MN':'smn','OFF':'sof','COMP_HOL':'scf','COMP_WEEK':'scf','CL':'scl','SL':'ssl','PL':'sel2','LOP':'slop','HOL':'shol'};
 
