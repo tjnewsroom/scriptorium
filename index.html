@@ -47,7 +47,6 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;min-
 .ni.active{color:var(--acc);background:rgba(99,85,232,.1);border-left-color:var(--acc);}
 .ni-dot{width:5px;height:5px;border-radius:50%;background:var(--mt);flex-shrink:0;}
 .ni.active .ni-dot{background:var(--acc);}
-/* FIX 1: sb-foot always visible with sign out prominent */
 .sb-foot{padding:10px 12px;border-top:1px solid var(--brd);font-size:10px;color:var(--mt);display:flex;flex-direction:column;gap:6px;}
 .sb-signout{width:100%;padding:7px 11px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--brd);background:rgba(248,113,113,.1);color:var(--r);font-family:'DM Sans',sans-serif;transition:all .15s;}
 .sb-signout:hover{background:rgba(248,113,113,.2);border-color:var(--r);}
@@ -203,7 +202,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
 #toast.show{opacity:1;transform:translateY(0);}
 #toast.success{background:var(--g);color:#000;}
 
-/* FIX 4: Shift confirm modal */
+/* Shift confirm modal */
 #shift-confirm-mo .mo{max-width:380px;}
 .shift-confirm-info{background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.7;}
 .shift-confirm-info strong{color:var(--acc);}
@@ -233,7 +232,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
   <div class="sb-logo">
     <div>
       <div class="sb-title">📺 TJ_NewsRoom_Manager</div>
-      <div style="font-size:9px;color:var(--mt);">v4.1 · Supabase</div>
+      <div style="font-size:9px;color:var(--mt);">v4.2 · Supabase</div>
     </div>
     <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">[NIGHT]</button>
   </div>
@@ -251,7 +250,6 @@ tr:hover td{background:rgba(99,85,232,.04);}
     <div class="ni" onclick="gp('departments',this)"><div class="ni-dot"></div>Departments</div>
     <div class="ni" onclick="gp('holidays',this)"><div class="ni-dot"></div>Holidays</div>
   </nav>
-  <!-- FIX 1: Sign Out button always visible at bottom of sidebar -->
   <div class="sb-foot">
     <div id="db-status"><div class="db-dot loading" id="db-dot"></div><span id="db-label">Connecting...</span></div>
     <div id="save-status">✓ Saved</div>
@@ -284,8 +282,8 @@ tr:hover td{background:rgba(99,85,232,.04);}
       <button class="btn bts" onclick="wkNav(-1)">‹ Prev</button>
       <span id="wk-lbl" style="font-size:11px;font-weight:600;min-width:180px;text-align:center;"></span>
       <button class="btn bts" onclick="wkNav(1)">Next ›</button>
-<button class="btn bts" style="background:#25d36622;border-color:#25d366;color:#25d366;" onclick="captureAndShare()" id="share-img-btn">📸 Share Image</button>
-    </div>
+      <button class="btn bts" style="background:#25d36622;border-color:#25d366;color:#25d366;" onclick="captureAndShare()" id="share-img-btn">📸 Share Image</button> 
+   </div>
   </div>
   <div class="ss-wrap" id="shift-tbl-wrap"></div>
 </div>
@@ -294,8 +292,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
 <div class="pg" id="pg-leaves">
 <div class="sh"><div class="st">Leave Tracker</div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
-    <!-- FIX 3: Year dropdown populated by JS in init() -->
-    <select id="lv-yr-filter" style="width:100px;" onchange="rLeaves()"></select>
+    <select id="lv-yr-filter" onchange="fetchLeaveBalances()"></select>
     <select id="lv-filter-mbr" style="width:160px;" onchange="rLeaves()"><option value="">All Members</option></select>
     <button class="btn bta bts" onclick="om('applyLvMo')">+ Apply Leave</button>
   </div>
@@ -355,6 +352,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
 <!-- ── DEPARTMENTS ── -->
 <div class="pg" id="pg-departments">
   <div class="sh"><div class="st">Departments</div></div>
+    <button class="btn bta bts" onclick="om('addDeptMo')">+ Add Department</button>
   <div id="dept-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;"></div>
 </div>
 
@@ -410,6 +408,8 @@ tr:hover td{background:rgba(99,85,232,.04);}
       <option value="CL">CL - Casual Leave</option><option value="SL">SL - Sick Leave</option>
       <option value="PL">PL - Privilege/Earned Leave</option><option value="LOP">LOP - Loss of Pay</option>
       <option value="HOL">HOLIDAY</option>
+      <option value="SWAP">SWAPCOMPOFF</option>
+
     </select>
   </div>
   <div class="fg"><label class="fl">Notes/Remarks</label><input type="text" id="ma-nt" placeholder="Optional..."></div>
@@ -477,7 +477,7 @@ tr:hover td{background:rgba(99,85,232,.04);}
   </div>
 </div></div>
 
-<!-- FIX 4: Shift Change Confirmation Modal -->
+<!-- Shift Change Confirmation Modal -->
 <div class="mo-ov" id="shift-confirm-mo"><div class="mo" style="max-width:380px;">
   <div class="mo-t">Confirm Shift Change <span class="mo-x" onclick="cancelShiftChange()">×</span></div>
   <div class="shift-confirm-info" id="shift-confirm-info"></div>
@@ -516,25 +516,26 @@ async function signOut() {
 const COLS=['#7c6fff','#4ade80','#fbbf24','#f87171','#60a5fa','#2dd4bf','#ff6b6b','#a78bfa','#34d399','#fb923c','#38bdf8','#e879f9','#facc15','#f472b6','#818cf8','#6ee7b7'];
 
 let depts   = [];
-let members = [];
+let members = [];  // identity only — NO leave balance fields stored here
 let att     = {};
 let leaves  = [];
 let holidays= [];
+let leaveBalances = {}; // keyed by employee_id, refreshed on every year-change
 
 const today    = new Date();
 const todayStr = today.toISOString().split('T')[0];
 let wkStart = gwStart(new Date());
 let calY = today.getFullYear(), calM = today.getMonth();
 
-// FIX 4: Pending shift change state
-let pendingShift = null; // {empId, ds, newVal, oldVal, sel}
+// Pending shift change state
+let pendingShift = null;
 
 const SOPTS=[
   {v:'',lbl:'- Select -',cls:'sem'},{v:'1ST',lbl:'1ST SHIFT',cls:'s1'},{v:'2ND',lbl:'2ND SHIFT',cls:'s2n'},
   {v:'NIGHT',lbl:'NIGHT',cls:'sn'},{v:'GEN',lbl:'GENERAL',cls:'sg2'},{v:'MN',lbl:'MORN/NOON',cls:'smn'},
   {v:'OFF',lbl:'OFF',cls:'sof'},{v:'COMP_HOL',lbl:'COMP(H)',cls:'scf'},{v:'COMP_WEEK',lbl:'COMP(W)',cls:'scf'},
   {v:'CL',lbl:'CL',cls:'scl'},{v:'SL',lbl:'SL',cls:'ssl'},{v:'PL',lbl:'PL',cls:'sel2'},
-  {v:'LOP',lbl:'LOP',cls:'slop'},{v:'HOL',lbl:'HOL',cls:'shol'},{v:'SWAP_OFF',lbl:'OFF-REQUSTED',cls:'sswap'},
+  {v:'LOP',lbl:'LOP',cls:'slop'},{v:'HOL',lbl:'HOL',cls:'shol'},{v:'SWAP',lbl:'SWAPREQUESTED',cls:'sswap'}
 ];
 const sCls={_:'sem','1ST':'s1','2ND':'s2n','NIGHT':'sn','GEN':'sg2','MN':'smn','OFF':'sof','COMP_HOL':'scf','COMP_WEEK':'scf','CL':'scl','SL':'ssl','PL':'sel2','LOP':'slop','HOL':'shol'};
 
@@ -559,6 +560,37 @@ function mByEid(eid){return members.find(m=>m.employee_id===eid);}
 function dById(id){return depts.find(d=>d.id===id);}
 function inits(n){return(n||'').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();}
 function mc(m){const idx=members.indexOf(m);return COLS[idx%COLS.length];}
+
+// ── KEY FIX: getBal() always reads from the year-aware leaveBalances map ──
+function getBal(empId) {
+  if (!leaveBalances[empId]) {
+    return {
+      cl_entitled: 0,
+      sl_entitled: 0,
+      pl_entitled: 0,
+      cl_used: 0,
+      sl_used: 0,
+      pl_used: 0,
+      comp_earned: 0,
+      comp_used: 0,
+      lop_days: 0,
+      _empty: true   // optional flag
+    };
+  }
+
+  const b = leaveBalances[empId];
+  return {
+    cl_entitled : b.cl_entitled ?? 0,
+    sl_entitled : b.sl_entitled ?? 0,
+    pl_entitled : b.pl_entitled ?? 0,
+    cl_used     : b.cl_used ?? 0,
+    sl_used     : b.sl_used ?? 0,
+    pl_used     : b.pl_used ?? 0,
+    comp_earned : b.comp_off_earned ?? 0,
+    comp_used   : b.comp_off_used ?? 0,
+    lop_days    : b.lop_days ?? 0,
+  };
+}
 
 function getAttPct(empId){
   const ym=todayStr.slice(0,7);
@@ -604,26 +636,22 @@ async function loadAllFromSupabase(){
   const {data:mData,error:mErr}=await sb.from('team_members').select('*').order('full_name');
   if(mErr) throw new Error('Members: '+mErr.message);
 
-  setLoadingText('Loading leave balances...');
-  const yr=new Date().getFullYear();
-  const {data:lbData,error:lbErr}=await sb.from('leave_balances').select('*').eq('year',yr);
-  if(lbErr) throw new Error('Leave balances: '+lbErr.message);
-
-  const balMap={};
-  (lbData||[]).forEach(b=>{balMap[b.employee_id]=b;});
-
-  members=mData.map(m=>{
-    const bal=balMap[m.employee_id]||{};
-    return {
-      employee_id:m.employee_id, full_name:m.full_name, role:m.role,
-      department_id:m.department_id, default_shift:m.default_shift,
-      phone:m.phone||'', email:m.email||'', pf_number:m.pf_number||'',
-      esi_number:m.esi_number||'', date_of_join:m.date_of_join||'', is_active:m.is_active,
-      cl_entitled:bal.cl_entitled??8, sl_entitled:bal.sl_entitled??6, pl_entitled:bal.pl_entitled??10,
-      cl_used:bal.cl_used??0, sl_used:bal.sl_used??0, pl_used:bal.pl_used??0,
-      comp_off_earned:bal.comp_off_earned??0, comp_off_used:bal.comp_off_used??0, lop_days:bal.lop_days??0,
-    };
-  });
+  // ── Store members WITHOUT baking in leave balances ──
+  // Leave balances are loaded separately via fetchLeaveBalances()
+  // so they stay in sync when the year dropdown changes.
+  members = mData.map(m => ({
+    employee_id   : m.employee_id,
+    full_name     : m.full_name,
+    role          : m.role,
+    department_id : m.department_id,
+    default_shift : m.default_shift,
+    phone         : m.phone    || '',
+    email         : m.email    || '',
+    pf_number     : m.pf_number  || '',
+    esi_number    : m.esi_number || '',
+    date_of_join  : m.date_of_join || '',
+    is_active     : m.is_active,
+  }));
 
   setLoadingText('Loading shift entries...');
   const {data:sData,error:sErr}=await sb.from('shift_entries').select('*');
@@ -708,6 +736,33 @@ async function deleteMember(employee_id){
 }
 
 // ════════════════════════════════════════
+// ▶ FETCH LEAVE BALANCES (year-aware)
+// Called on init AND whenever year dropdown changes
+// ════════════════════════════════════════
+async function fetchLeaveBalances() {
+  const yr = document.getElementById('lv-yr-filter').value;
+  if (!yr) return;
+
+  const { data, error } = await sb
+    .from('leave_balances')
+    .select('*')
+    .eq('year', yr);
+
+  // Reset and rebuild the map for the selected year
+  leaveBalances = {};
+  (data || []).forEach(b => {
+    leaveBalances[b.employee_id] = b;
+  });
+
+  if (error) {
+    console.error('Leave balances fetch error:', error);
+    showToast('Could not load leave balances for ' + yr);
+  }
+
+  rLeaves();
+}
+
+// ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
 function setLoadingText(msg){
@@ -715,7 +770,6 @@ function setLoadingText(msg){
   if(el)el.textContent=msg;
 }
 
-// FIX 3: Populate year dropdown for leave tracker
 function populateLeaveYearFilter(){
   const sel=document.getElementById('lv-yr-filter');
   if(!sel)return;
@@ -739,7 +793,7 @@ async function init(){
   document.getElementById('ma-dt').value=todayStr;
   document.getElementById('mis-mo').value=todayStr.slice(0,7);
 
-  // FIX 3: Populate year dropdown before data loads
+  // Populate year dropdown BEFORE any data load
   populateLeaveYearFilter();
 
   setDbStatus('loading','Connecting...');
@@ -748,11 +802,12 @@ async function init(){
     await loadAllFromSupabase();
     setDbStatus('ok','Connected ✓');
     document.getElementById('loading-overlay').classList.add('hidden');
-    // FIX 2: All renders happen after data is fully loaded
+
     popSelects();
     rDash();
     rShift();
-    rLeaves();
+    // fetchLeaveBalances fetches for the current year then calls rLeaves() internally
+    await fetchLeaveBalances();
     rTeam();
     rDept();
     rHols();
@@ -817,7 +872,7 @@ function donutSVG(segments,size=80,stroke=14){
 }
 
 // ════════════════════════════════════════
-// DASHBOARD  (FIX 2: always reads from loaded `att` state)
+// DASHBOARD
 // ════════════════════════════════════════
 function rDash(){
   const a=att[todayStr]||{};
@@ -853,6 +908,7 @@ function rDash(){
           const cls=sCls[v]||'sem';
           const attPct=getAttPct(m.employee_id);
           const pctColor=attPct>=90?'var(--g)':attPct>=75?'var(--am)':'var(--r)';
+          const bal=getBal(m.employee_id);
           return`<div class="mbr-card" onclick="viewMbr('${m.employee_id}')">
             <div class="mbr-card-actions" onclick="event.stopPropagation()">
               <button class="mbr-card-act-btn edit" onclick="openEditMo('${m.employee_id}')">Edit</button>
@@ -868,9 +924,9 @@ function rDash(){
             </div>
             <div class="prb" style="margin-bottom:6px;"><div class="prf" style="width:${attPct}%;background:${pctColor};"></div></div>
             <div style="display:flex;gap:6px;font-size:10px;color:var(--mt);">
-              <span>CL:${(m.cl_entitled||8)-(m.cl_used||0)}</span>
-              <span>SL:${(m.sl_entitled||6)-(m.sl_used||0)}</span>
-              <span>PL:${(m.pl_entitled||10)-(m.pl_used||0)}</span>
+              <span>CL:${bal.cl_entitled - bal.cl_used}</span>
+              <span>SL:${bal.sl_entitled - bal.sl_used}</span>
+              <span>PL:${bal.pl_entitled - bal.pl_used}</span>
             </div>
           </div>`;
         }).join('')}
@@ -920,7 +976,6 @@ function rShift(){
           if(isH)return`<td style="text-align:center;background:rgba(45,212,191,.08);border:1px solid var(--brd);"><span style="font-size:10px;color:var(--tl);font-weight:600;">HOL</span></td>`;
           const val=gv(m.employee_id,ds),cls=sCls[val]||'sem';
           const opts=SOPTS.map(o=>`<option value="${o.v}" ${val===o.v?'selected':''}>${o.lbl}</option>`).join('');
-          // FIX 4: onchange now asks for confirmation
           return`<td style="padding:2px 3px;border:1px solid var(--brd);"><select class="ss-sel ${cls}" onchange="requestShiftChange('${m.employee_id}','${ds}',this)">${opts}</select></td>`;
         }).join('')}
       </tr>`;
@@ -931,22 +986,18 @@ function rShift(){
 }
 
 // ════════════════════════════════════════
-// FIX 4: SHIFT CHANGE CONFIRMATION FLOW
+// SHIFT CHANGE CONFIRMATION FLOW
 // ════════════════════════════════════════
 function requestShiftChange(empId, ds, sel){
   const newVal = sel.value;
   const oldVal = att[ds]?.[empId]?.shift || '';
 
-  // Store pending change
   pendingShift = {empId, ds, newVal, oldVal, sel};
 
   const m = mByEid(empId);
   const mName = m ? m.full_name : empId;
-
-  // Build date label
   const dateObj = new Date(ds + 'T00:00:00');
   const dateLbl = dateObj.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'short', year:'numeric'});
-
   const newLbl = SOPTS.find(o=>o.v===newVal)?.lbl || newVal || '(Clear)';
   const oldLbl = oldVal ? (SOPTS.find(o=>o.v===oldVal)?.lbl || oldVal) : 'Not set';
 
@@ -967,21 +1018,16 @@ async function confirmShiftChange(){
 
   cm('shift-confirm-mo');
 
-  // Update local state
   if(!att[ds]) att[ds]={};
   if(!att[ds][empId]) att[ds][empId]={};
   att[ds][empId].shift = newVal;
   att[ds][empId].remarks = remarks;
 
-  // Update cell style
   sel.className = 'ss-sel ' + (sCls[newVal] || 'sem');
-
   rDash();
 
-  // Persist
   const ok = await upsertShift(empId, ds, newVal, remarks);
   if(!ok){
-    // Revert on failure
     const oldVal = pendingShift.oldVal;
     att[ds][empId].shift = oldVal;
     sel.value = oldVal;
@@ -994,7 +1040,6 @@ async function confirmShiftChange(){
 
 function cancelShiftChange(){
   if(pendingShift){
-    // Revert the select element visually
     const {oldVal, sel} = pendingShift;
     sel.value = oldVal;
     sel.className = 'ss-sel ' + (sCls[oldVal] || 'sem');
@@ -1023,18 +1068,27 @@ async function markAtt(){
 }
 
 // ════════════════════════════════════════
-// LEAVES
+// LEAVES  — ALL reads use getBal() so year-change is instant
 // ════════════════════════════════════════
 function rLeaves(){
-  const filterEid=document.getElementById('lv-filter-mbr')?.value||'';
-  const filteredMbrs=filterEid?members.filter(m=>m.employee_id===filterEid):members;
+  const selectedYear = document.getElementById('lv-yr-filter').value;
+  const filterEid = document.getElementById('lv-filter-mbr')?.value || '';
 
-  const totalCL=members.reduce((s,m)=>s+(m.cl_used||0),0);
-  const totalSL=members.reduce((s,m)=>s+(m.sl_used||0),0);
-  const totalPL=members.reduce((s,m)=>s+(m.pl_used||0),0);
-  const totalCoff=members.reduce((s,m)=>s+(m.comp_off_used||0),0);
-  const totalLOP=members.reduce((s,m)=>s+(m.lop_days||0),0);
-  const totalPending=leaves.filter(l=>l.status==='Pending').length;
+  // Filter leaves by selected year + member
+  const lvFiltered = leaves.filter(l => {
+    const matchMember = filterEid ? l.employee_id === filterEid : true;
+    const year = new Date(l.from_date).getFullYear();
+    const matchYear = selectedYear ? year == selectedYear : true;
+    return matchMember && matchYear;
+  });
+
+  // Summary counts from filtered leave applications
+  const totalCL   = lvFiltered.filter(l=>l.leave_type==='CL').reduce((s,l)=>s+l.total_days,0);
+  const totalSL   = lvFiltered.filter(l=>l.leave_type==='SL').reduce((s,l)=>s+l.total_days,0);
+  const totalPL   = lvFiltered.filter(l=>l.leave_type==='PL').reduce((s,l)=>s+l.total_days,0);
+  const totalCoff = lvFiltered.filter(l=>l.leave_type==='Comp Off'||l.leave_type==='COMP_HOL'||l.leave_type==='COMP_WEEK').reduce((s,l)=>s+l.total_days,0);
+  const totalLOP  = lvFiltered.filter(l=>l.leave_type==='LOP').reduce((s,l)=>s+l.total_days,0);
+  const totalPending = lvFiltered.filter(l=>l.status==='Pending').length;
 
   document.getElementById('lv-summary-cards').innerHTML=[
     {l:'CL Used',v:totalCL,c:'var(--am)',info:'Casual Leave'},
@@ -1043,56 +1097,112 @@ function rLeaves(){
     {l:'Comp Off',v:totalCoff,c:'var(--acc)',info:'Compensatory'},
     {l:'LOP',v:totalLOP,c:'var(--r)',info:'Loss of Pay'},
     {l:'Pending',v:totalPending,c:'var(--am)',info:'Awaiting approval'},
-  ].map(s=>`<div class="lv-tc"><div class="lv-tc-label">${s.l}</div><div class="lv-tc-val" style="color:${s.c};">${s.v}</div><div class="lv-tc-sub">${s.info}</div></div>`).join('');
+  ].map(s=>`<div class="lv-tc">
+      <div class="lv-tc-label">${s.l}</div>
+      <div class="lv-tc-val" style="color:${s.c};">${s.v}</div>
+      <div class="lv-tc-sub">${s.info}</div>
+    </div>`).join('');
 
-  // Balance table
-  document.getElementById('lv-bal').innerHTML=filteredMbrs.map(m=>{
-    const uCL=m.cl_used||0,uSL=m.sl_used||0,uPL=m.pl_used||0,uC=m.comp_off_used||0,uL=m.lop_days||0;
-    const used=uCL+uSL+uPL+uL;
-    const entitled=(m.cl_entitled||8)+(m.sl_entitled||6)+(m.pl_entitled||10);
-    const left=Math.max(0,entitled-used);
-    const pct=entitled?Math.round(used/entitled*100):0;
-    const c=mc(m);
-    return`<tr>
-      <td class="tl"><div style="display:flex;align-items:center;gap:6px;"><div class="av" style="background:${c}22;color:${c};">${inits(m.full_name)}</div>${m.full_name}</div></td>
-      <td style="text-align:center;color:var(--am);">${(m.cl_entitled||8)-uCL}/<span style="color:var(--mt);font-size:10px;">${m.cl_entitled||8}</span></td>
-      <td style="text-align:center;color:var(--bl);">${(m.sl_entitled||6)-uSL}/<span style="color:var(--mt);font-size:10px;">${m.sl_entitled||6}</span></td>
-      <td style="text-align:center;color:var(--g);">${(m.pl_entitled||10)-uPL}/<span style="color:var(--mt);font-size:10px;">${m.pl_entitled||10}</span></td>
+  // ── Balance table: entitlements come from leaveBalances map (year-aware) ──
+  const filteredMbrs = filterEid
+    ? members.filter(m=>m.employee_id===filterEid)
+    : members;
+
+  document.getElementById('lv-bal').innerHTML = filteredMbrs.map(m => {
+    const bal = getBal(m.employee_id); // ← always reads current year's leaveBalances map
+
+    const mLeaves = lvFiltered.filter(l => l.employee_id === m.employee_id);
+
+    // Count usage from leave applications for the selected year
+    const uCL = mLeaves.filter(l=>l.leave_type==='CL').reduce((s,l)=>s+l.total_days,0);
+    const uSL = mLeaves.filter(l=>l.leave_type==='SL').reduce((s,l)=>s+l.total_days,0);
+    const uPL = mLeaves.filter(l=>l.leave_type==='PL').reduce((s,l)=>s+l.total_days,0);
+    const uC  = mLeaves.filter(l=>l.leave_type==='Comp Off'||l.leave_type==='COMP_HOL'||l.leave_type==='COMP_WEEK').reduce((s,l)=>s+l.total_days,0);
+    const uL  = mLeaves.filter(l=>l.leave_type==='LOP').reduce((s,l)=>s+l.total_days,0);
+
+    const used     = uCL + uSL + uPL + uL;
+    const entitled = bal.cl_entitled + bal.sl_entitled + bal.pl_entitled;
+    const left     = Math.max(0, entitled - used);
+    const pct      = entitled ? Math.round(used / entitled * 100) : 0;
+
+    const c = mc(m);
+
+    return `<tr>
+      <td class="tl">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="av" style="background:${c}22;color:${c};">${inits(m.full_name)}</div>
+          ${m.full_name}
+        </div>
+      </td>
+      <td style="text-align:center;color:var(--am);">
+        ${bal.cl_entitled - uCL}/<span style="color:var(--mt);font-size:10px;">${bal.cl_entitled}</span>
+      </td>
+      <td style="text-align:center;color:var(--bl);">
+        ${bal.sl_entitled - uSL}/<span style="color:var(--mt);font-size:10px;">${bal.sl_entitled}</span>
+      </td>
+      <td style="text-align:center;color:var(--g);">
+        ${bal.pl_entitled - uPL}/<span style="color:var(--mt);font-size:10px;">${bal.pl_entitled}</span>
+      </td>
       <td style="text-align:center;color:var(--acc);">${uC}</td>
       <td style="text-align:center;color:var(--r);font-style:italic;">${uL}</td>
-      <td style="text-align:center;"><div class="prb"><div class="prf" style="width:${pct}%;background:var(--am);"></div></div><span style="font-size:10px;color:var(--mt);">${used} used</span></td>
-      <td style="text-align:center;font-weight:600;color:${left>5?'var(--g)':left>0?'var(--am)':'var(--r)'};">${left}</td>
+      <td style="text-align:center;">
+        <div class="prb">
+          <div class="prf" style="width:${pct}%;background:var(--am);"></div>
+        </div>
+        <span style="font-size:10px;color:var(--mt);">${used} used</span>
+      </td>
+      <td style="text-align:center;font-weight:600;color:${left>5?'var(--g)':left>0?'var(--am)':'var(--r)'};">
+        ${left}
+      </td>
     </tr>`;
   }).join('');
 
-  // Donut
-  const segs=[{color:'#fbbf24',v:totalCL,l:'CL'},{color:'#60a5fa',v:totalSL,l:'SL'},{color:'#4ade80',v:totalPL,l:'PL'},{color:'#818cf8',v:totalCoff,l:'Comp'},{color:'#f87171',v:totalLOP,l:'LOP'}].filter(s=>s.v>0);
+  // Donut chart
+  const segs=[
+    {color:'#fbbf24',v:totalCL,l:'CL'},
+    {color:'#60a5fa',v:totalSL,l:'SL'},
+    {color:'#4ade80',v:totalPL,l:'PL'},
+    {color:'#818cf8',v:totalCoff,l:'Comp'},
+    {color:'#f87171',v:totalLOP,l:'LOP'}
+  ].filter(s=>s.v>0);
+
   const stot=Math.max(1,segs.reduce((s,x)=>s+x.v,0));
   const segsFmt=segs.map(s=>({...s,pct:Math.round(s.v/stot*100)}));
   let rem=100-segsFmt.reduce((s,x)=>s+x.pct,0);
   if(segsFmt.length)segsFmt[0].pct+=rem;
   else segsFmt.push({color:'var(--brd)',pct:100,l:'None',v:0});
-  document.getElementById('lv-donut-wrap').innerHTML=donutSVG(segsFmt,110,16);
-  document.getElementById('lv-donut-legend').innerHTML=segsFmt.filter(s=>s.v>0).map(s=>`<div class="donut-item"><div class="donut-dot" style="background:${s.color};"></div><span style="font-size:11px;">${s.l}: ${s.v} days</span></div>`).join('');
 
-  // Leave list
-  const lvShow=filterEid?leaves.filter(l=>l.employee_id===filterEid):leaves;
-  document.getElementById('lv-list').innerHTML=lvShow.length?lvShow.map(l=>{
-    const m=mByEid(l.employee_id);
-    const d=dById(m?.department_id);
-    const sc={Pending:'bam',Approved:'bg',Rejected:'br'}[l.status]||'bmt';
-    const ac=l.status==='Pending'?`<button class="btn bts btg" onclick="appLv('${l.id}')">✓ Approve</button> <button class="btn bts btr" onclick="rejLv('${l.id}')">✗ Reject</button>`:'-';
-    return`<tr>
-      <td class="tl">${m?.full_name||l.employee_id}</td>
-      <td style="font-size:10px;color:${d?.color||'var(--mt)'};">${d?.name||'-'}</td>
-      <td><span class="bdg bpu">${l.leave_type}</span></td>
-      <td>${l.from_date}</td><td>${l.to_date}</td>
-      <td style="text-align:center;">${l.total_days}</td>
-      <td style="color:var(--mt);font-size:10px;max-width:120px;">${l.reason||'-'}</td>
-      <td><span class="bdg ${sc}">${l.status}</span></td>
-      <td>${ac}</td>
-    </tr>`;
-  }).join(''):`<tr><td colspan="9" style="text-align:center;color:var(--mt);padding:16px;">No leave applications</td></tr>`;
+  document.getElementById('lv-donut-wrap').innerHTML=donutSVG(segsFmt,110,16);
+  document.getElementById('lv-donut-legend').innerHTML=
+    segsFmt.filter(s=>s.v>0)
+    .map(s=>`<div class="donut-item">
+        <div class="donut-dot" style="background:${s.color};"></div>
+        <span style="font-size:11px;">${s.l}: ${s.v} days</span>
+      </div>`).join('');
+
+  // Leave applications list
+  document.getElementById('lv-list').innerHTML=lvFiltered.length
+    ?lvFiltered.map(l=>{
+        const m=mByEid(l.employee_id);
+        const d=dById(m?.department_id);
+        const sc={Pending:'bam',Approved:'bg',Rejected:'br'}[l.status]||'bmt';
+        const ac=l.status==='Pending'
+          ?`<button class="btn bts btg" onclick="appLv('${l.id}')">✓ Approve</button>
+             <button class="btn bts btr" onclick="rejLv('${l.id}')">✗ Reject</button>`
+          :'-';
+        return`<tr>
+          <td class="tl">${m?.full_name||l.employee_id}</td>
+          <td style="font-size:10px;color:${d?.color||'var(--mt)'};">${d?.name||'-'}</td>
+          <td><span class="bdg bpu">${l.leave_type}</span></td>
+          <td>${l.from_date}</td>
+          <td>${l.to_date}</td>
+          <td style="text-align:center;">${l.total_days}</td>
+          <td style="color:var(--mt);font-size:10px;max-width:120px;">${l.reason||'-'}</td>
+          <td><span class="bdg ${sc}">${l.status}</span></td>
+          <td>${ac}</td>
+        </tr>`;
+      }).join('')
+    :`<tr><td colspan="9" style="text-align:center;color:var(--mt);padding:16px;">No leave applications</td></tr>`;
 }
 
 async function applyLv(){
@@ -1127,10 +1237,10 @@ document.addEventListener('change',e=>{
     const empId=document.getElementById('lv-mbr')?.value;
     const type=document.getElementById('lv-type')?.value;
     const m=mByEid(empId);if(!m)return;
-    const bal={CL:(m.cl_entitled||8)-(m.cl_used||0),SL:(m.sl_entitled||6)-(m.sl_used||0),PL:(m.pl_entitled||10)-(m.pl_used||0)};
+    const bal=getBal(empId);
     const pv=document.getElementById('lv-balance-preview');
     if(pv){
-      const balLeft={CL:bal.CL,SL:bal.SL,PL:bal.PL,COMP_HOL:'Earned',COMP_WEEK:'Earned',LOP:'-',ML:'-'}[type];
+      const balLeft={CL:bal.cl_entitled-bal.cl_used,SL:bal.sl_entitled-bal.sl_used,PL:bal.pl_entitled-bal.pl_used,COMP_HOL:'Earned',COMP_WEEK:'Earned',LOP:'-',ML:'-'}[type];
       const warn=typeof balLeft==='number'&&balLeft<=0?' ⚠ Balance exhausted':'';
       pv.innerHTML=`<strong>${m.full_name}</strong> · ${type} · Balance: <strong style="color:${typeof balLeft==='number'&&balLeft<=0?'var(--r)':'var(--g)'};">${balLeft}</strong>${warn}`;
     }
@@ -1187,15 +1297,20 @@ function genMIS(){
 }
 
 // ════════════════════════════════════════
-// MEMBER VIEW PROFILE
+// MEMBER VIEW PROFILE — uses getBal() for year-aware entitlements
 // ════════════════════════════════════════
 function viewMbr(empId){
   const m=mByEid(empId);if(!m)return;
   const d=dById(m.department_id),c=mc(m);
-  const uCL=m.cl_used||0,uSL=m.sl_used||0,uPL=m.pl_used||0,uC=m.comp_off_used||0,uL=m.lop_days||0;
+  const bal=getBal(empId); // ← year-aware
   const attPct=getAttPct(empId);
   const pctColor=attPct>=90?'var(--g)':attPct>=75?'var(--am)':'var(--r)';
   const mLeaves=leaves.filter(l=>l.employee_id===empId);
+
+  // Remaining balances (entitled minus used from DB record)
+  const clLeft = bal.cl_entitled - bal.cl_used;
+  const slLeft = bal.sl_entitled - bal.sl_used;
+  const plLeft = bal.pl_entitled - bal.pl_used;
 
   document.getElementById('vmb-title').innerHTML=`${m.full_name} — Profile <span class="mo-x" onclick="cm('viewMo')">×</span>`;
   document.getElementById('vmb-body').innerHTML=`
@@ -1217,11 +1332,11 @@ function viewMbr(empId){
     <div style="font-size:11px;font-weight:600;margin-bottom:8px;">Leave Balance</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px;">
       ${[
-        ['CL',(m.cl_entitled||8)-uCL,m.cl_entitled||8,'var(--am)'],
-        ['SL',(m.sl_entitled||6)-uSL,m.sl_entitled||6,'var(--bl)'],
-        ['PL',(m.pl_entitled||10)-uPL,m.pl_entitled||10,'var(--g)'],
-        ['Comp',m.comp_off_earned||0,'Earned','var(--acc)'],
-        ['LOP',uL,'Used','var(--r)']
+        ['CL', clLeft, bal.cl_entitled, 'var(--am)'],
+        ['SL', slLeft, bal.sl_entitled, 'var(--bl)'],
+        ['PL', plLeft, bal.pl_entitled, 'var(--g)'],
+        ['Comp', bal.comp_earned, 'Earned', 'var(--acc)'],
+        ['LOP', bal.lop_days, 'Used', 'var(--r)']
       ].map(([l,v,tot,col])=>`<div style="background:var(--s2);border-radius:7px;padding:8px;text-align:center;"><div style="font-size:9px;color:var(--mt);">${l}</div><div style="font-size:18px;font-weight:600;color:${col};">${v}</div><div style="font-size:9px;color:var(--mt);">of ${tot}</div></div>`).join('')}
     </div>
     <div style="font-size:11px;font-weight:600;margin-bottom:7px;">Leave History (${mLeaves.length})</div>
@@ -1232,7 +1347,7 @@ function viewMbr(empId){
 }
 
 // ════════════════════════════════════════
-// TEAM PAGE
+// TEAM PAGE — uses getBal() for year-aware leave columns
 // ════════════════════════════════════════
 function rTeam(){
   const q=(document.getElementById('mbr-search')?.value||'').toLowerCase();
@@ -1249,6 +1364,7 @@ function rTeam(){
           const ap=getAttPct(m.employee_id);
           const apc=ap>=90?'var(--g)':ap>=75?'var(--am)':'var(--r)';
           const sc={'1ST':'var(--am)','2ND':'var(--bl)','NIGHT':'var(--acc)','GEN':'var(--tl)','MN':'var(--g)'}[m.default_shift]||'var(--mt)';
+          const bal=getBal(m.employee_id); // ← year-aware
           return`<tr>
             <td style="text-align:center;color:var(--mt);">${i+1}</td>
             <td class="tl"><div style="display:flex;align-items:center;gap:6px;"><div class="av" style="background:${c}22;color:${c};">${inits(m.full_name)}</div><span style="cursor:pointer;color:var(--acc);" onclick="viewMbr('${m.employee_id}')">${m.full_name}</span></div></td>
@@ -1257,9 +1373,9 @@ function rTeam(){
             <td><span style="font-size:11px;font-weight:600;color:${sc};">${m.default_shift}</span></td>
             <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mt);">${m.pf_number||'-'}</td>
             <td style="font-size:10px;color:var(--mt);">${m.phone||'-'}</td>
-            <td style="text-align:center;color:var(--am);">${(m.cl_entitled||8)-(m.cl_used||0)}</td>
-            <td style="text-align:center;color:var(--bl);">${(m.sl_entitled||6)-(m.sl_used||0)}</td>
-            <td style="text-align:center;color:var(--g);">${(m.pl_entitled||10)-(m.pl_used||0)}</td>
+            <td style="text-align:center;color:var(--am);">${bal.cl_entitled - bal.cl_used}</td>
+            <td style="text-align:center;color:var(--bl);">${bal.sl_entitled - bal.sl_used}</td>
+            <td style="text-align:center;color:var(--g);">${bal.pl_entitled - bal.pl_used}</td>
             <td style="text-align:center;font-weight:600;color:${apc};">${ap}%</td>
             <td style="white-space:nowrap;">
               <button class="btn bts" onclick="viewMbr('${m.employee_id}')">View</button>
@@ -1307,17 +1423,17 @@ async function saveMbr(){
   const origId=document.getElementById('em-orig-id').value;
   const isNew=!origId;
   const data={
-    employee_id: isNew ? document.getElementById('em-eid').value.trim() : origId,
-    full_name:   document.getElementById('em-nm').value.trim(),
-    department_id: document.getElementById('em-dept').value,
-    role:        document.getElementById('em-rl').value.trim(),
-    phone:       document.getElementById('em-ph').value.trim(),
-    email:       document.getElementById('em-em').value.trim(),
-    pf_number:   document.getElementById('em-pf').value.trim(),
-    esi_number:  document.getElementById('em-esi').value.trim(),
-    date_of_join:document.getElementById('em-doj').value||null,
-    default_shift:document.getElementById('em-sh').value,
-    is_active:   true,
+    employee_id   : isNew ? document.getElementById('em-eid').value.trim() : origId,
+    full_name     : document.getElementById('em-nm').value.trim(),
+    department_id : document.getElementById('em-dept').value,
+    role          : document.getElementById('em-rl').value.trim(),
+    phone         : document.getElementById('em-ph').value.trim(),
+    email         : document.getElementById('em-em').value.trim(),
+    pf_number     : document.getElementById('em-pf').value.trim(),
+    esi_number    : document.getElementById('em-esi').value.trim(),
+    date_of_join  : document.getElementById('em-doj').value||null,
+    default_shift : document.getElementById('em-sh').value,
+    is_active     : true,
   };
   if(!data.full_name)return showToast('Enter name');
   if(isNew&&!data.employee_id)return showToast('Enter Employee ID');
@@ -1326,7 +1442,7 @@ async function saveMbr(){
   if(!ok)return;
 
   if(isNew){
-    members.push({...data,cl_entitled:8,sl_entitled:6,pl_entitled:10,cl_used:0,sl_used:0,pl_used:0,comp_off_earned:0,comp_off_used:0,lop_days:0});
+    members.push({...data});
   }else{
     const m=mByEid(origId);if(m)Object.assign(m,data);
   }
@@ -1344,6 +1460,7 @@ function confirmDel(empId,name){
     if(ok){
       members=members.filter(m=>m.employee_id!==empId);
       leaves=leaves.filter(l=>l.employee_id!==empId);
+      delete leaveBalances[empId];
       popSelects();rTeam();rShift();rDash();rLeaves();
       showToast(name+' deleted','success');
     }
@@ -1446,7 +1563,6 @@ function copyPubText(){
   const ta=document.getElementById('pub-text-output');ta.select();document.execCommand('copy');
   const btn=document.getElementById('copy-pub-btn');btn.textContent='✅ Copied!';setTimeout(()=>{btn.textContent='📋 Copy Text';},2000);
 }
-
 // ════════════════════════════════════════
 // SHIFT PAGE — CAPTURE & SHARE AS IMAGE
 // ════════════════════════════════════════
@@ -1636,11 +1752,64 @@ function downloadImage(canvas, fileName) {
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
+// ════════════════════════════════════════
+// ADD DEPARTMENT
+// ════════════════════════════════════════
+function genUUID(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
 
+// Pre-fill UUID when modal opens
+const _origOm = om;
+// Patch om to fill UUID when addDeptMo opens
+document.addEventListener('click', e => {
+  if(e.target && e.target.getAttribute('onclick') === "om('addDeptMo')"){
+    setTimeout(()=>{
+      const el = document.getElementById('dept-id-preview');
+      if(el && !el.value) el.value = genUUID();
+    }, 50);
+  }
+});
+
+async function saveDept(){
+  const name = document.getElementById('dept-nm').value.trim();
+  const color = document.getElementById('dept-color').value;
+  const id = document.getElementById('dept-id-preview').value.trim();
+  if(!name) return showToast('Enter department name');
+  if(!id)   return showToast('ID missing — reopen modal');
+
+  const {error} = await sb.from('departments').insert({id, name, color_hex: color});
+  if(error){ showToast('Save failed: '+error.message); return; }
+
+  depts.push({id, name, color});
+  depts.sort((a,b)=>a.name.localeCompare(b.name));
+
+  // Clear and close
+  document.getElementById('dept-nm').value = '';
+  document.getElementById('dept-id-preview').value = '';
+  cm('addDeptMo');
+
+  popSelects();
+  rDept();
+  rDash();
+  rTeam();
+  showToast('Department added!', 'success');
+}
 // ════════════════════════════════════════
 // BOOT
 // ════════════════════════════════════════
 init();
 </script>
+<!-- Add Department -->
+<div class="mo-ov" id="addDeptMo"><div class="mo" style="max-width:400px;">
+  <div class="mo-t">Add Department <span class="mo-x" onclick="cm('addDeptMo')">×</span></div>
+  <div class="fg"><label class="fl">Department Name</label><input type="text" id="dept-nm" placeholder="e.g. Sports Desk"></div>
+  <div class="fg"><label class="fl">Color</label><input type="color" id="dept-color" value="#7c6fff" style="height:36px;padding:2px 4px;cursor:pointer;"></div>
+  <div class="fg"><label class="fl">ID (auto-generated UUID)</label><input type="text" id="dept-id-preview" readonly style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mt);"></div>
+  <div class="mo-ac"><button class="btn" onclick="cm('addDeptMo')">Cancel</button><button class="btn bta" onclick="saveDept()">Save Department</button></div>
+</div></div>
 </body>
 </html>
