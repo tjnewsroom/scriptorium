@@ -1753,31 +1753,128 @@ async function captureAndShare() {
 // ════════════════════════════════════════
 // IMPORT SHIFT CSV / SQL
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// IMPORT SHIFT CSV / SQL
+// ════════════════════════════════════════
+
+const SHIFT_LABEL_MAP = {
+  '2ND SHIFT'            : '2ND',
+  '1ST SHIFT'            : '1ST',
+  'NIGHT'                : 'NIGHT',
+  'OFF'                  : 'OFF',
+  'OFFREQUESTED'        : 'OFFREQUESTED',
+  '-1ST SHIFT REQUESTED' : '1STSHIFTREQUESTED',
+  '-2ND SHIFT REQUESTED' : '2NDSHIFTREQUESTED',
+  'NOON SHIFT'           : 'MN',
+  'GEN'                  : 'GEN',
+  'COMP_HOL'             : 'COMP_HOL',
+  'COMP_WEEK'            : 'COMP_WEEK',
+  'CL'                   : 'CL',
+  'SL'                   : 'SL',
+  'PL'                   : 'PL',
+  'LOP'                  : 'LOP',
+  'HOL'                  : 'HOL',
+};
+
+function normalizeShift(raw) {
+  const s = raw.trim().toUpperCase().replace(/\s+/g, ' ');
+  return SHIFT_LABEL_MAP[s] || null;
+}
+
+function nameToEmpId(name) {
+  const n = name.trim().toUpperCase();
+  const found = members.find(m =>
+    m.full_name.toUpperCase().includes(n) ||
+    n.includes(m.full_name.toUpperCase().split(' ')[0])
+  );
+  return found ? found.employee_id : null;
+}
+
 async function importShiftCSV(input) {
   const file = input.files[0];
   if (!file) return;
   input.value = '';
-
   const text = await file.text();
   const rows = [];
 
-  // Detect SQL format (INSERT INTO shift_entries ...)
+  // ── SQL format ──
   if (text.trimStart().toUpperCase().startsWith('INSERT')) {
     const regex = /\('([^']+)',\s*'([^']+)',\s*'([^']+)',\s*(NULL|'[^']*')\)/g;
     let m;
     while ((m = regex.exec(text)) !== null) {
-      rows.push({ employee_id: m[1], shift_date: m[2], shift_code: m[3], remarks: m[4] === 'NULL' ? '' : m[4].slice(1, -1) });
+      rows.push({
+        employee_id : m[1],
+        shift_date  : m[2],
+        shift_code  : m[3],
+        remarks     : m[4] === 'NULL' ? '' : m[4].slice(1, -1)
+      });
     }
+
+  // ── Wide CSV/TSV format ──
   } else {
-    // CSV format: employee_id, shift_date, shift_code, remarks
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    const header = lines[0].toLowerCase();
-    const startIdx = header.includes('employee_id') ? 1 : 0;
-    for (let i = startIdx; i < lines.length; i++) {
-      const [employee_id, shift_date, shift_code, remarks = ''] = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-      if (employee_id && shift_date && shift_code) {
-        rows.push({ employee_id, shift_date, shift_code, remarks });
+    const lines = text.replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean);
+
+    let headerIdx = lines.findIndex(l => /\d{2}-\d{2}-\d{4}|\d{4}-\d{2}-\d{2}/.test(l));
+    if (headerIdx === -1) headerIdx = 0;
+
+    const delimiter = lines[headerIdx].includes('\t') ? '\t' : ',';
+    const headerCols = lines[headerIdx].split(delimiter);
+
+    // Parse dates from header
+    const dates = [];
+    for (let c = 2; c < headerCols.length; c++) {
+      const raw = headerCols[c].trim();
+      let iso = null;
+      if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
+        const [dd, mm, yyyy] = raw.split('-');
+        iso = `${yyyy}-${mm}-${dd}`;
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        iso = raw;
       }
+      dates.push(iso);
+    }
+
+    const skipped = [];
+
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const cols = lines[i].split(delimiter);
+      if (cols.length < 3) continue;
+
+      const col0 = cols[0].trim();
+      const nameRaw = cols[1].trim();
+      if (!nameRaw) continue;
+
+      // ✅ Use employee_id directly from col 0 if it's a valid ID in members
+      // Only fall back to name matching if col 0 is not a known employee_id
+      let empId = null;
+      const memberById = members.find(m => m.employee_id === col0);
+      if (memberById) {
+        // ✅ Direct ID match — most accurate
+        empId = col0;
+      } else {
+        // Fallback: strict full name match only
+        const n = nameRaw.toUpperCase();
+        const memberByName = members.find(m => m.full_name.toUpperCase() === n);
+        if (memberByName) {
+          empId = memberByName.employee_id;
+        } else {
+          skipped.push(`${col0} / ${nameRaw}`);
+          continue;
+        }
+      }
+
+      for (let c = 2; c < cols.length; c++) {
+        const shiftDate = dates[c - 2];
+        if (!shiftDate) continue;
+        const shiftCode = normalizeShift(cols[c] || '');
+        if (!shiftCode) continue;
+        rows.push({ employee_id: empId, shift_date: shiftDate, shift_code: shiftCode, remarks: '' });
+      }
+    }
+
+    if (skipped.length) {
+      console.warn('Unmatched rows:', skipped);
+      showToast(`⚠ ${skipped.length} rows unmatched: ${skipped.slice(0,3).join(', ')}`);
     }
   }
 
@@ -1785,14 +1882,15 @@ async function importShiftCSV(input) {
 
   showToast(`Uploading ${rows.length} entries...`, 'success');
 
-  // Upsert in batches of 50
   const BATCH = 50;
   let failed = 0;
   for (let i = 0; i < rows.length; i += BATCH) {
     const batch = rows.slice(i, i + BATCH);
     const { error } = await sb.from('shift_entries').upsert(batch, { onConflict: 'employee_id,shift_date' });
-    if (error) { failed += batch.length; console.error(error); }
-    else {
+    if (error) {
+      failed += batch.length;
+      console.error('Batch error:', error, batch);
+    } else {
       batch.forEach(r => {
         if (!att[r.shift_date]) att[r.shift_date] = {};
         att[r.shift_date][r.employee_id] = { shift: r.shift_code, remarks: r.remarks };
@@ -1801,9 +1899,10 @@ async function importShiftCSV(input) {
   }
 
   rShift(); rDash();
-  if (failed) showToast(`Done with ${failed} failed rows`);
+  if (failed) showToast(`Done — ${failed} rows failed (check console)`);
   else showToast(`✓ ${rows.length} entries imported!`, 'success');
 }
+
 function downloadImage(canvas, fileName) {
   const link = document.createElement('a');
   link.download = fileName;
