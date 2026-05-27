@@ -964,17 +964,62 @@ function rShift(){
     }).join('')}
   </tr></thead><tbody>`;
 
-  depts.forEach(d=>{
-    const dm=members.filter(m=>m.department_id===d.id);
-    if(!dm.length)return;
-    h+=`<tr><td colspan="9" style="background:${d.color}18;color:${d.color};font-size:11px;font-weight:700;padding:5px 10px;text-align:center;border:1px solid var(--brd);">${d.name.toUpperCase()}</td></tr>`;
-    dm.forEach((m,idx)=>{
+  const totalCols = 2 + days.length;
+
+  // Get unique roles in the order you want
+  // VIDEO EDITORS group: Video Editors + NLE_PRODUCTION roles together
+  // Then News Producers, Voice Over as their own groups
+  const roleOrder = ['Video Editors', 'NLE_PRODUCTION', 'News Producers', 'Voice Over'];
+  
+  // Get all unique roles from members, put known ones first then any others
+  const allRoles = [...new Set(members.map(m=>m.role).filter(Boolean))];
+  const orderedRoles = [
+    ...roleOrder.filter(r=>allRoles.includes(r)),
+    ...allRoles.filter(r=>!roleOrder.includes(r))
+  ];
+
+  // Define which roles merge under VIDEO EDITORS header
+  const veRoles = ['Video Editors', 'NLE_PRODUCTION'];
+
+  let veRendered = false;
+
+  orderedRoles.forEach(role=>{
+    // If this role is part of VIDEO EDITORS group but not the first one, skip — already rendered
+    if(veRoles.includes(role) && veRendered) return;
+
+    const isVEGroup = veRoles.includes(role);
+
+    // Collect members for this group
+    let groupMembers;
+    if(isVEGroup){
+      groupMembers = members.filter(m=>veRoles.includes(m.role));
+      veRendered = true;
+    } else {
+      groupMembers = members.filter(m=>m.role===role);
+    }
+
+    if(!groupMembers.length) return;
+
+    const headerLabel = isVEGroup ? 'VIDEO EDITORS' : role.toUpperCase();
+    const headerColor = isVEGroup ? 'var(--acc)' : 'var(--tl)';
+    const headerBg    = isVEGroup ? 'rgba(124,111,255,.12)' : 'rgba(45,212,191,.08)';
+
+    h+=`<tr>
+      <td colspan="${totalCols}" style="background:${headerBg};color:${headerColor};font-size:11px;font-weight:700;padding:5px 10px;text-align:center;border:1px solid var(--brd);">
+        ${headerLabel}
+      </td>
+    </tr>`;
+
+    groupMembers.forEach((m,idx)=>{
       const c=mc(m);
       h+=`<tr>
         <td class="stk" style="text-align:center;color:var(--mt);font-size:10px;font-weight:600;">${idx+1}</td>
         <td class="stk2" style="padding:3px 8px;"><div style="display:flex;align-items:center;gap:5px;">
           <div class="av" style="background:${c}22;color:${c};width:20px;height:20px;font-size:8px;">${inits(m.full_name)}</div>
-          <span style="font-size:11px;font-weight:600;cursor:pointer;color:var(--acc);" onclick="viewMbr('${m.employee_id}')">${m.full_name.toUpperCase()}</span>
+          <div>
+            <span style="font-size:11px;font-weight:600;cursor:pointer;color:var(--acc);" onclick="viewMbr('${m.employee_id}')">${m.full_name.toUpperCase()}</span>
+            <div style="font-size:9px;color:var(--mt);line-height:1.2;">${m.role}</div>
+          </div>
         </div></td>
         ${days.map(d2=>{
           const ds=fd(d2),isH=isHol(ds);
@@ -986,10 +1031,10 @@ function rShift(){
       </tr>`;
     });
   });
+
   h+='</tbody></table>';
   document.getElementById('shift-tbl-wrap').innerHTML=h;
 }
-
 // ════════════════════════════════════════
 // SHIFT CHANGE CONFIRMATION FLOW
 // ════════════════════════════════════════
