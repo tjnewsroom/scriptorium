@@ -969,7 +969,7 @@ function rShift(){
   // Get unique roles in the order you want
   // VIDEO EDITORS group: Video Editors + NLE_PRODUCTION roles together
   // Then News Producers, Voice Over as their own groups
-  const roleOrder = ['Video Editors', 'NLE_PRODUCTION', 'News Producers', 'Voice Over'];
+ const roleOrder = ['VIDEO EDITORS', 'HEAD-NLE', 'NEWS PRODUCER', 'VOICE OVER'];
   
   // Get all unique roles from members, put known ones first then any others
   const allRoles = [...new Set(members.map(m=>m.role).filter(Boolean))];
@@ -979,7 +979,7 @@ function rShift(){
   ];
 
   // Define which roles merge under VIDEO EDITORS header
-  const veRoles = ['Video Editors', 'NLE_PRODUCTION'];
+const veRoles = ['VIDEO EDITORS', 'HEAD-NLE'];
 
   let veRendered = false;
 
