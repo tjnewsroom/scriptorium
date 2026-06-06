@@ -336,6 +336,8 @@ const SB_KEY = "%%SUPABASE_ANON_KEY%%";
 
 
 
+
+
 const { createClient } = supabase;
 const sb = createClient(SB_URL, SB_KEY);
 
@@ -1018,12 +1020,6 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
                </a>`
             : `<span style="font-size:10px;color:var(--mt)">📍 No location</span>`
           }
-          ${isToday?`<div style="margin-top:10px">
-            <button onclick="recordIN('${empId}','${container}','${dept}')"
-              style="background:transparent;border:1px solid var(--green);color:var(--green);border-radius:7px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;width:100%">
-              🔄 Update IN Time
-            </button>
-          </div>`:""}
         ` : `
           <div style="font-size:11px;font-weight:700;color:var(--mt);letter-spacing:.1em;margin-bottom:10px">CHECK IN</div>
           <div style="font-size:32px;margin-bottom:10px">🟢</div>
