@@ -533,7 +533,7 @@ async function loadAll(role="admin", empId=null){
 
   // ── shifts ──
   setLd("Loading shifts...");
-  const{data:sd,error:sErr}=await sb.from("shift_entries").select("*");
+  const{data:sd,error:sErr}=await sb.from("shift_entries").select("*").limit(99999);;
   if(sErr) console.error("shift_entries error:",sErr.message);
   SHIFTS={};
   (sd||[]).forEach(s=>{
