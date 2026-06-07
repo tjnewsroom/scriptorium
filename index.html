@@ -355,6 +355,28 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
   </div>
 </div>
 
+<!-- EDIT EMPLOYEE MODAL -->
+<div class="mo" id="edit-emp-mo">
+  <div class="mo-box">
+    <div class="mo-t">Edit Employee <button class="mo-x" onclick="closeMo('edit-emp-mo')">×</button></div>
+    <input type="hidden" id="ee-uuid"/>
+    <input type="hidden" id="ee-old-code"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><label class="lbl">Employee Code</label><input class="inp" id="ee-code" placeholder="e.g. 22023"/></div>
+      <div><label class="lbl">Full Name</label><input class="inp" id="ee-name" placeholder="JOHN K"/></div>
+    </div>
+    <div class="fg"><label class="lbl">Department</label>
+      <select class="inp" id="ee-dept">
+        <option>NLE Editor</option><option>News Producer</option><option>Voice Over</option>
+      </select>
+    </div>
+    <div class="mo-ac">
+      <button class="btn btn-s" onclick="closeMo('edit-emp-mo')">Cancel</button>
+      <button class="btn btn-p" onclick="saveEditEmp()">✓ Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- DELETE CONFIRM MODAL -->
 <div class="mo" id="del-mo">
   <div class="mo-box" style="max-width:360px">
@@ -375,6 +397,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 const SB_URL = "%%SUPABASE_URL%%";
 const SB_KEY = "%%SUPABASE_ANON_KEY%%";
 
+//const SB_URL      = 'https://neemkbqcwjwlxtuetqvo.supabase.co';
+//const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lZW1rYnFjd2p3bHh0dWV0cXZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMDM5OTAsImV4cCI6MjA5MTg3OTk5MH0.4-SwxYctW24cH-sa-96gycPnHKiZwtwY0PQn09NuH9A';
 
 
 
@@ -1900,6 +1924,7 @@ function renderStaff(){
       <td><span class="bdg" style="background:${deptColor(e.dept)}18;color:${deptColor(e.dept)}">${e.dept}</span></td>
       <td style="text-align:center"><span style="background:${e.is_active?"var(--gl)":"var(--rl)"};color:${e.is_active?"var(--green)":"var(--red)"};padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600">${e.is_active?"Active":"Inactive"}</span></td>
       <td style="text-align:center"><div style="display:flex;gap:6px;justify-content:center">
+        <button class="btn btn-s btn-sm" onclick="openEditEmp('${e._uuid}','${e.id}','${e.name.replace(/'/g,"\\'")}','${e.dept}')">✏️ Edit</button>
         <button class="btn btn-s btn-sm" onclick="toggleEmpActive('${e._uuid}','${e.id}',${!e.is_active})">${e.is_active?"Deactivate":"Activate"}</button>
         <button class="btn btn-d btn-sm" onclick="confirmDeleteEmp('${e._uuid}','${e.name}')">🗑 Del</button>
       </div></td>
@@ -1919,6 +1944,32 @@ async function addEmp(){
   if(error)return toast("Failed: "+error.message,"er");
   EMPS.push({id:code,name,dept,is_active:true,_uuid:data.id});
   toast("✓ Employee added");renderStaff();
+}
+
+function openEditEmp(uuid, code, name, dept){
+  $("ee-uuid").value=uuid;
+  $("ee-old-code").value=code;
+  $("ee-code").value=code;
+  $("ee-name").value=name;
+  $("ee-dept").value=dept;
+  openMo("edit-emp-mo");
+}
+
+async function saveEditEmp(){
+  const uuid=$("ee-uuid").value;
+  const oldCode=$("ee-old-code").value;
+  const newCode=$("ee-code").value.trim();
+  const newName=$("ee-name").value.trim().toUpperCase();
+  const newDept=$("ee-dept").value;
+  if(!newCode||!newName)return toast("Code and Name required","er");
+  if(newCode!==oldCode && EMPS.find(e=>e.id===newCode))return toast("Employee code already in use","er");
+  const{error}=await sb.from("employees").update({emp_code:newCode,name:newName,dept:newDept}).eq("id",uuid);
+  if(error)return toast("Update failed: "+error.message,"er");
+  const emp=EMPS.find(e=>e._uuid===uuid);
+  if(emp){emp.id=newCode;emp.name=newName;emp.dept=newDept;}
+  toast("✓ Employee updated");
+  closeMo("edit-emp-mo");
+  renderStaff();
 }
 
 async function toggleEmpActive(uuid, empId, newState){
