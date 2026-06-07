@@ -173,9 +173,9 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* MOBILE */
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--brd);padding:6px 12px 10px;z-index:300}
-.mob-wrap{display:flex;justify-content:space-around}
-.mob-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;font-weight:600;color:var(--mt);cursor:pointer;padding:5px 8px;border-radius:8px;border:none;background:transparent;min-width:48px}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--brd);padding:6px 4px 10px;z-index:300;overflow-x:auto}
+.mob-wrap{display:flex;justify-content:space-around;min-width:max-content;gap:2px;padding:0 4px}
+.mob-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;font-weight:600;color:var(--mt);cursor:pointer;padding:5px 8px;border-radius:8px;border:none;background:transparent;min-width:52px;white-space:nowrap}
 .mob-btn.active{color:var(--blue);background:var(--bl)}
 .mob-btn .mi{font-size:18px}
 
@@ -231,6 +231,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
       <div class="nsec">Performance</div>
       <button class="ni" id="en-score" onclick="eNav('score')"><span class="ni-ico">📊</span>My Score</button>
       <button class="ni" id="en-history" onclick="eNav('history')"><span class="ni-ico">📅</span>History</button>
+      <div class="nsec" id="en-switch-sec" style="display:none">Switch Role</div>
+      <button class="ni" id="en-switch" style="display:none;color:var(--purple);background:rgba(124,58,237,.08)" onclick="switchToAdminView()"><span class="ni-ico">🔐</span>Admin Dashboard</button>
     </div>
     <div class="content"><div class="page">
       <div id="et-daily"></div>
@@ -244,6 +246,7 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
     <button class="mob-btn" id="em-breaks" onclick="eNav('breaks')"><span class="mi">☕</span>Break</button>
     <button class="mob-btn" id="em-score" onclick="eNav('score')"><span class="mi">📊</span>Score</button>
     <button class="mob-btn" id="em-history" onclick="eNav('history')"><span class="mi">📅</span>History</button>
+    <button class="mob-btn" id="em-switch" style="display:none;color:var(--purple)" onclick="switchToAdminView()"><span class="mi">🔐</span>Admin</button>
   </div></div>
 </div>
 
@@ -279,6 +282,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
       <button class="ni" id="an-prod" onclick="aNav('prod')"><span class="ni-ico">📋</span>Producers</button>
       <div class="nsec">Reports</div>
       <button class="ni" id="an-report" onclick="aNav('report')"><span class="ni-ico">📈</span>Full Report</button>
+      <div class="nsec" id="an-switch-sec" style="display:none">Switch Role</div>
+      <button class="ni" id="an-switch" style="display:none;color:var(--purple);background:rgba(124,58,237,.08)" onclick="switchToEmpView()"><span class="ni-ico">👤</span>Employee View</button>
     </div>
     <div class="content"><div class="page">
       <div id="at-mywork"></div>
@@ -296,8 +301,15 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
   <div class="mob-nav"><div class="mob-wrap">
     <button class="mob-btn active" id="am-mywork" onclick="aNav('mywork')"><span class="mi">✍️</span>My Work</button>
     <button class="mob-btn" id="am-overview" onclick="aNav('overview')"><span class="mi">🏠</span>Overview</button>
+    <button class="mob-btn" id="am-today" onclick="aNav('today')"><span class="mi">👁</span>Today</button>
+    <button class="mob-btn" id="am-att" onclick="aNav('att')"><span class="mi">🕐</span>Attend</button>
     <button class="mob-btn" id="am-shifts" onclick="aNav('shifts')"><span class="mi">📅</span>Shifts</button>
+    <button class="mob-btn" id="am-staff" onclick="aNav('staff')"><span class="mi">👥</span>Staff</button>
+    <button class="mob-btn" id="am-quality" onclick="aNav('quality')"><span class="mi">⚠️</span>Quality</button>
+    <button class="mob-btn" id="am-rel" onclick="aNav('rel')"><span class="mi">⭐</span>Reliability</button>
+    <button class="mob-btn" id="am-prod" onclick="aNav('prod')"><span class="mi">📋</span>Producers</button>
     <button class="mob-btn" id="am-report" onclick="aNav('report')"><span class="mi">📈</span>Report</button>
+    <button class="mob-btn" id="am-switch" style="display:none;color:var(--purple)" onclick="switchToEmpView()"><span class="mi">👤</span>Emp View</button>
   </div></div>
 </div>
 
@@ -333,6 +345,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 // ══════════════════════════════════════════════
 const SB_URL = "%%SUPABASE_URL%%";
 const SB_KEY = "%%SUPABASE_ANON_KEY%%";
+
+
 
 
 
@@ -912,7 +926,7 @@ async function afterLogin(session){
     const emp = empId ? EMPS.find(e => e.id === empId) : null;
     ME.name = emp?.name || session.user.email;
     ME.dept = emp?.dept || "NLE Editor";
-    ME.id   = emp?.id  || null;
+    ME.id   = emp?.id  || empId || null;
     ME.hasEmpRecord = !!emp;
     openAdmin();
 
@@ -971,6 +985,12 @@ function openEmp(){
   $("e-dept").style.color=deptColor(ME.dept);
   $("e-dept").textContent=ME.id+" · "+ME.dept;
   $("e-date").value=todayStr();
+  // Show "Admin Dashboard" switch for dual-role (admin + employee) users
+  if(ME.role==="admin" && ME.hasEmpRecord){
+    const sw=$("en-switch"),ss=$("en-switch-sec"),ms=$("em-switch");
+    if(sw){sw.style.display="";ss.style.display="";}
+    if(ms)ms.style.display="";
+  }
   eNav("daily");
 }
 
@@ -1367,10 +1387,18 @@ function openAdmin(){
   if(!ME.hasEmpRecord){
     if(myWorkNav)myWorkNav.style.display="none";
     if(myWorkMob)myWorkMob.style.display="none";
+    // Also hide switch buttons
+    const sw=$("an-switch"),ss=$("an-switch-sec"),ms=$("am-switch");
+    if(sw){sw.style.display="none";ss.style.display="none";}
+    if(ms)ms.style.display="none";
     aNav("overview");
   } else {
     if(myWorkNav)myWorkNav.style.display="";
     if(myWorkMob)myWorkMob.style.display="";
+    // Show "Employee View" switch for dual-role (admin + employee) users
+    const sw=$("an-switch"),ss=$("an-switch-sec"),ms=$("am-switch");
+    if(sw){sw.style.display="";ss.style.display="";}
+    if(ms)ms.style.display="";
     aNav("mywork");
   }
 }
@@ -2038,6 +2066,19 @@ async function exportImg(){
       setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);toast("✓ Image downloaded");
     },"image/png");
   }catch(e){toast("Failed: "+e.message,"er");}
+}
+
+// ══════════════════════════════════════════════
+// ROLE SWITCH — dual-role (admin + employee) only
+// ══════════════════════════════════════════════
+function switchToEmpView(){
+  // Admin switching to see their personal Employee screen
+  openEmp();
+}
+
+function switchToAdminView(){
+  // Dual-role user switching back to Admin Dashboard
+  openAdmin();
 }
 
 // ══════════════════════════════════════════════
