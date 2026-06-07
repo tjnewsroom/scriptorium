@@ -1515,7 +1515,7 @@ function renderShifts(){
   const today=todayStr();
   const dn=["SUN","MON","TUE","WED","THU","FRI","SAT"];
   const allE=EMPS.filter(e=>e.is_active);
-  const depts=[...new Set(allE.map(e=>e.dept))];
+const depts = ["NLE Editor", "News Producer", "Voice Over"];
 
   let html=`<div class="sec-hdr">
     <div><div class="sec-title">Shift Planner</div><div class="sec-sub">${fmtShort(days[0])} — ${fmtShort(days[6])}</div></div>
@@ -1546,12 +1546,11 @@ function renderShifts(){
     const dc=deptColor(dept);
     const emps=allE.filter(e=>e.dept===dept);
     if(!emps.length)return;
-    html+=`<tr><td colspan="${9}" style="background:${dc}12;color:${dc};font-size:11px;font-weight:700;padding:6px 12px;text-align:center;border:1px solid var(--brd)">${dept.toUpperCase()}</td></tr>`;
-    emps.forEach((e,idx)=>{
+html+=`<tr><td colspan="${9}" style="background:${dc}12;color:${dc};font-size:11px;font-weight:700;padding:12px 16px;text-align:center;border:1px solid var(--brd);border-top:3px solid ${dc}">${dept.toUpperCase()}</td></tr>`;    emps.forEach((e,idx)=>{
       html+=`<tr>
         <td class="sh-stk" style="text-align:center;color:var(--mt);font-size:10px">${idx+1}</td>
-        <td class="sh-stk2" style="padding:4px 8px">
-          <div style="font-size:11px;font-weight:600;color:${dc}">${shortN(e.name)}</div>
+          <td class="sh-stk2" style="padding:10px 8px">
+            <div style="font-size:11px;font-weight:600;color:${dc}">${shortN(e.name)}</div>
           <div style="font-size:9px;color:var(--mt);font-family:'JetBrains Mono'">${e.id}</div>
         </td>
         ${days.map(d=>{
