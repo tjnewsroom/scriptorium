@@ -172,6 +172,17 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 .db-dot.er{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
+/* ── WELCOME OVERLAY ── */
+#welcome-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .4s}
+#welcome-overlay.show{opacity:1;pointer-events:all}
+.wc-box{background:var(--surf);border:2px solid var(--green);border-radius:20px;padding:32px 44px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:wcPop .5s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes wcPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.wc-title{font-size:28px;font-weight:800;letter-spacing:-.5px;color:var(--txt);margin:10px 0 4px}
+.wc-time{font-size:15px;font-family:'JetBrains Mono';color:var(--green);font-weight:600}
+.wc-sub{font-size:13px;color:var(--mt);margin-top:6px}
+.petal{position:fixed;pointer-events:none;font-size:22px;animation:petalFall linear forwards;z-index:10001}
+@keyframes petalFall{0%{transform:translateY(-30px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
 /* MOBILE */
 .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--brd);padding:6px 4px 10px;z-index:300;overflow-x:auto}
 .mob-wrap{display:flex;justify-content:space-around;min-width:max-content;gap:2px;padding:0 4px}
@@ -186,6 +197,15 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 </head>
 <body>
 <div id="toast"></div>
+<div id="welcome-overlay">
+  <div class="wc-box">
+    <div style="font-size:52px">🌸</div>
+    <div class="wc-title" id="wc-name">Welcome!</div>
+    <div class="wc-time" id="wc-time">—</div>
+    <div class="wc-sub" id="wc-msg">Have a great shift!</div>
+    <button class="btn btn-p" style="margin-top:18px;padding:9px 28px" onclick="hideWelcome()">Let's Go! 🚀</button>
+  </div>
+</div>
 <div id="loader"><div class="ld-ring"></div><div class="ld-txt" id="ld-msg">Connecting...</div></div>
 
 <!-- ═══════════════════════════════
@@ -269,7 +289,10 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
   <div class="app-wrap">
     <div class="sidebar">
       <div class="nsec">My Work</div>
-      <button class="ni active" id="an-mywork" onclick="aNav('mywork')"><span class="ni-ico">✍️</span>My Work Entry</button>
+      <button class="ni active" id="an-mywork" onclick="aNav('mywork')"><span class="ni-ico">✍️</span>Daily Entry</button>
+      <button class="ni" id="an-mybreaks" onclick="aNav('mybreaks')"><span class="ni-ico">☕</span>Break / Lunch</button>
+      <button class="ni" id="an-myscore" onclick="aNav('myscore')"><span class="ni-ico">📊</span>My Score</button>
+      <button class="ni" id="an-myhistory" onclick="aNav('myhistory')"><span class="ni-ico">📅</span>My History</button>
       <div class="nsec">Analytics</div>
       <button class="ni" id="an-overview" onclick="aNav('overview')"><span class="ni-ico">🏠</span>Overview</button>
       <button class="ni" id="an-today" onclick="aNav('today')"><span class="ni-ico">👁</span>Today's Work</button>
@@ -287,6 +310,9 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
     </div>
     <div class="content"><div class="page">
       <div id="at-mywork"></div>
+      <div id="at-mybreaks" style="display:none"></div>
+      <div id="at-myscore" style="display:none"></div>
+      <div id="at-myhistory" style="display:none"></div>
       <div id="at-overview" style="display:none"></div>
       <div id="at-today" style="display:none"></div>
       <div id="at-att" style="display:none"></div>
@@ -300,6 +326,9 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
   </div>
   <div class="mob-nav"><div class="mob-wrap">
     <button class="mob-btn active" id="am-mywork" onclick="aNav('mywork')"><span class="mi">✍️</span>My Work</button>
+    <button class="mob-btn" id="am-mybreaks" onclick="aNav('mybreaks')"><span class="mi">☕</span>Break</button>
+    <button class="mob-btn" id="am-myscore" onclick="aNav('myscore')"><span class="mi">📊</span>Score</button>
+    <button class="mob-btn" id="am-myhistory" onclick="aNav('myhistory')"><span class="mi">📅</span>History</button>
     <button class="mob-btn" id="am-overview" onclick="aNav('overview')"><span class="mi">🏠</span>Overview</button>
     <button class="mob-btn" id="am-today" onclick="aNav('today')"><span class="mi">👁</span>Today</button>
     <button class="mob-btn" id="am-att" onclick="aNav('att')"><span class="mi">🕐</span>Attend</button>
@@ -345,6 +374,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 // ══════════════════════════════════════════════
 const SB_URL = "%%SUPABASE_URL%%";
 const SB_KEY = "%%SUPABASE_ANON_KEY%%";
+
+
 
 
 
@@ -463,6 +494,39 @@ let eTab = "daily";
 let aTab = "mywork";
 let wkStart = gwkStart(new Date());
 let pendingShift = null;
+
+// ══════════════════════════════════════════════
+// WELCOME FLOWER SHOWER
+// ══════════════════════════════════════════════
+function showWelcome(name, timeStr){
+  const ov=$("welcome-overlay");
+  $("wc-name").textContent="Welcome, "+name+"! 👋";
+  $("wc-time").textContent="IN Time: "+timeStr;
+  const hour=parseInt(timeStr.split(":")[0])||8;
+  const msgs=hour<10?["Early bird! You're amazing 🌅","Great start to the day! ☀️"]:hour<14?["Good morning! Let's make it count 💪","Ready to create great content! 🎬"]:hour<18?["Good afternoon! Keep it up ⚡","Making the day count! 📺"]:["Evening shift! You've got this 🌙","Night shift hero! 🌟"];
+  $("wc-msg").textContent=msgs[Math.floor(Math.random()*msgs.length)];
+  ov.classList.add("show");
+  // Flower shower
+  const flowers=["🌸","🌺","🌼","🌻","💐","🌷","✿","🏵","🌹","🌿","⭐","✨","🎊","🎉"];
+  for(let i=0;i<38;i++){
+    setTimeout(()=>{
+      const p=document.createElement("div");
+      p.className="petal";
+      p.textContent=flowers[Math.floor(Math.random()*flowers.length)];
+      p.style.left=Math.random()*100+"vw";
+      p.style.top="-40px";
+      p.style.animationDuration=(2+Math.random()*3)+"s";
+      p.style.animationDelay="0s";
+      p.style.fontSize=(14+Math.random()*18)+"px";
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),5500);
+    },i*80);
+  }
+}
+
+function hideWelcome(){
+  $("welcome-overlay").classList.remove("show");
+}
 
 // ══════════════════════════════════════════════
 // UTILS
@@ -803,6 +867,7 @@ async function recordIN(empCode, container, dept){
   if(loc)fields.in_location=loc;
   await sbSaveAttendance(empCode,today,fields);
   toast("✓ IN: "+now+(loc?" 📍 Location saved":""));
+  showWelcome(ME.name||"there", now);
   // Re-render the same page
   if(container&&dept)renderDailyEntry(empCode,dept,today,container,ME.role==="admin");
   else if(ME.role==="admin")aRender();
@@ -1375,6 +1440,60 @@ function renderHistory(){
 }
 
 // ══════════════════════════════════════════════
+// ADMIN MY SCORE & HISTORY (mirrors employee versions, targets at- divs)
+// ══════════════════════════════════════════════
+function renderAdminScore(){
+  if(!ME.id){$("at-myscore").innerHTML=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)">No employee record linked</div>`;return;}
+  const now=new Date();
+  const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  const sc=calcScore(ME.id,ME.dept,monthKey);
+  const b=perfBadge(sc.final);
+  const R=44,circ=2*Math.PI*R,dash=circ*sc.final/100;
+  $("at-myscore").innerHTML=`<div class="sec-hdr"><div class="sec-title">My Performance Score</div><div class="sec-sub">Read-only — set by admin</div></div>
+  <div class="card" style="text-align:center">
+    <div class="ring-wrap" style="margin-bottom:16px">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle cx="55" cy="55" r="${R}" fill="none" stroke="var(--surf2)" stroke-width="10"/>
+        <circle cx="55" cy="55" r="${R}" fill="none" stroke="${b.color}" stroke-width="10"
+          stroke-dasharray="${dash} ${circ-dash}" stroke-linecap="round"/>
+      </svg>
+      <div class="ring-inner">
+        <div style="font-size:26px;font-weight:800;font-family:'JetBrains Mono';color:${b.color}">${sc.final}</div>
+        <div style="font-size:10px;color:var(--mt)">/ 100</div>
+      </div>
+    </div>
+    <div style="font-size:18px;margin-bottom:4px">${b.icon}</div>
+    <div style="font-size:15px;font-weight:700;color:${b.color}">${b.label}</div>
+  </div>
+  <div class="sg">
+    ${[{l:"Quality",v:sc.qualityScore,c:"var(--green)"},{l:"Output",v:sc.outputScore,c:"var(--blue)"},{l:"Reliability",v:sc.reliScore,c:"var(--amber)"},{l:"Creativity",v:sc.creativityScore,c:"var(--purple)"}].map(s=>`<div class="sc"><div class="sv" style="color:${s.c}">${s.v}</div><div class="sl">${s.l}</div></div>`).join("")}
+  </div>`;
+}
+
+function renderAdminHistory(){
+  if(!ME.id){$("at-myhistory").innerHTML=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)">No employee record linked</div>`;return;}
+  const days=Object.keys(DAILY[ME.id]||{}).sort().reverse().slice(0,30);
+  let html=`<div class="sec-hdr"><div class="sec-title">My History</div><div class="sec-sub">Last 30 days</div></div>`;
+  if(!days.length){html+=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">📅</div>No history yet</div>`;}
+  else days.forEach(d=>{
+    const items=DAILY[ME.id][d]||[];
+    const wpts=items.reduce((s,it)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};return s+nt.weight;},0);
+    const mins=items.reduce((s,it)=>s+(tdiff(it.startTime,it.endTime)??it.manualMins??0),0);
+    html+=`<div class="card-sm" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="$('a-date').value='${d}';aNav('mywork')">
+      <div style="width:44px;text-align:center;flex-shrink:0">
+        <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono'">${new Date(d+"T00:00").getDate()}</div>
+        <div style="font-size:10px;color:var(--mt)">${new Date(d+"T00:00").toLocaleDateString("en-IN",{month:"short"})}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${items.length} items · ${fmtMin(mins)}</div>
+        <div style="font-size:11px;color:var(--mt)">${wpts} weighted pts</div>
+      </div>
+    </div>`;
+  });
+  $("at-myhistory").innerHTML=html;
+}
+
+// ══════════════════════════════════════════════
 // ADMIN DASHBOARD
 // ══════════════════════════════════════════════
 function openAdmin(){
@@ -1387,6 +1506,8 @@ function openAdmin(){
   if(!ME.hasEmpRecord){
     if(myWorkNav)myWorkNav.style.display="none";
     if(myWorkMob)myWorkMob.style.display="none";
+    // Hide My Work sub-tabs too
+    ["an-mybreaks","an-myscore","an-myhistory","am-mybreaks","am-myscore","am-myhistory"].forEach(id=>{const el=$(id);if(el)el.style.display="none";});
     // Also hide switch buttons
     const sw=$("an-switch"),ss=$("an-switch-sec"),ms=$("am-switch");
     if(sw){sw.style.display="none";ss.style.display="none";}
@@ -1405,7 +1526,7 @@ function openAdmin(){
 
 function aNav(tab){
   aTab=tab;
-  const tabs=["mywork","overview","today","att","shifts","staff","quality","rel","prod","report"];
+  const tabs=["mywork","mybreaks","myscore","myhistory","overview","today","att","shifts","staff","quality","rel","prod","report"];
   tabs.forEach(t=>{
     const el=$("at-"+t);if(el)el.style.display=t===tab?"block":"none";
     const n=$("an-"+t);if(n)n.classList.toggle("active",t===tab);
@@ -1417,6 +1538,9 @@ function aNav(tab){
 function aRender(){
   const d=$("a-date").value||todayStr();
   if(aTab==="mywork")renderDailyEntry(ME.id,ME.dept,d,"at-mywork",true);
+  else if(aTab==="mybreaks")renderBreaksTab(ME.id,d,"at-mybreaks");
+  else if(aTab==="myscore")renderAdminScore();
+  else if(aTab==="myhistory")renderAdminHistory();
   else if(aTab==="overview")renderOverview(d);
   else if(aTab==="today")renderToday(d);
   else if(aTab==="att")renderAttendance(d);
