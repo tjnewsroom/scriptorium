@@ -338,6 +338,7 @@ const SB_KEY = "%%SUPABASE_ANON_KEY%%";
 
 
 
+
 const { createClient } = supabase;
 const sb = createClient(SB_URL, SB_KEY);
 
@@ -419,6 +420,8 @@ const SHIFT_OPTS = [
   {v:"PL",       lbl:"PL",       cls:"spl"},
   {v:"LOP",      lbl:"LOP",      cls:"slp"},
   {v:"HOL",      lbl:"HOL",      cls:"shl"},
+  {v:'OFFREQUESTED',lbl:'OFFREQUESTED',cls:'sswap'},{v:'1STSHIFTREQUESTED',lbl:'1STSHIFTREQUESTED',cls:'sswap'},{v:'2NDSHIFTREQUESTED',lbl:'2NDSHIFTREQUESTED',cls:'sswap'}
+
 ];
 const SH_CLS = {"1ST":"s1","2ND":"s2","NIGHT":"sn","GEN":"sg2","MN":"smn","OFF":"sof","COMP_HOL":"scp","COMP_WEEK":"scp","CL":"scl","SL":"ssl","PL":"spl","LOP":"slp","HOL":"shl"};
 
@@ -533,7 +536,7 @@ async function loadAll(role="admin", empId=null){
 
   // ── shifts ──
   setLd("Loading shifts...");
-  const{data:sd,error:sErr}=await sb.from("shift_entries").select("*").limit(99999);;
+  const{data:sd,error:sErr}=await sb.from("shift_entries").select("*");
   if(sErr) console.error("shift_entries error:",sErr.message);
   SHIFTS={};
   (sd||[]).forEach(s=>{
@@ -1634,7 +1637,27 @@ async function captureShift(){
   }catch(e){toast("Failed: "+e.message,"er");}
 }
 
-const SH_MAP={"1ST SHIFT":"1ST","2ND SHIFT":"2ND","NIGHT":"NIGHT","OFF":"OFF","NOON SHIFT":"MN","GEN":"GEN","GENERAL":"GEN","COMP_HOL":"COMP_HOL","COMP_WEEK":"COMP_WEEK","CL":"CL","SL":"SL","PL":"PL","LOP":"LOP","HOL":"HOL"};
+const SH_MAP=
+{  
+  '2ND SHIFT'            : '2ND',
+  '1ST SHIFT'            : '1ST',
+  'NIGHT'                : 'NIGHT',
+  'OFF'                  : 'OFF',
+  'OFFREQUESTED'        : 'OFFREQUESTED',
+  '-1STSHIFTREQUESTED' : '1STSHIFTREQUESTED',
+  '-2NDSHIFTREQUESTED' : '2NDSHIFTREQUESTED',
+  '1STSHIFTREQUESTED' : '1STSHIFTREQUESTED',
+  '2NDSHIFTREQUESTED' : '2NDSHIFTREQUESTED',
+  'NOON SHIFT'           : 'MN',
+  'GEN'                  : 'GEN',
+  'COMP_HOL'             : 'COMP_HOL',
+  'COMP_WEEK'            : 'COMP_WEEK',
+  'CL'                   : 'CL',
+  'SL'                   : 'SL',
+  'PL'                   : 'PL',
+  'LOP'                  : 'LOP',
+  'HOL'                  : 'HOL'
+};
 function normShift(raw){const s=raw.trim().toUpperCase().replace(/\s+/g," ");return SH_MAP[s]||null;}
 
 async function importCSV(input){
