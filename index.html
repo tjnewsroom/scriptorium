@@ -818,7 +818,7 @@ allShifts.forEach(s=>{
 
   // ── NLE daily entries ──
   setLd("Loading daily entries...");
-  const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").order("created_at");
+const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").order("created_at",{ascending:false}).limit(50000);  
   if(nErr) console.error("nle_daily_entries error:",nErr.message);
   DAILY={};
   (nd||[]).forEach(r=>{
