@@ -193,6 +193,95 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
 @media(max-width:900px){.sidebar{display:none}.mob-nav{display:block}.page{padding:14px;padding-bottom:80px}}
 @media(max-width:600px){.sg{grid-template-columns:1fr 1fr}}
 @media(min-width:901px){.mob-nav{display:none}}
+
+/* ══ SHIFT CHANGE REQUEST ══════════════════════════════════ */
+.scr-bell-wrap{position:relative;cursor:pointer;display:flex;align-items:center}
+.scr-bell-badge{position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;font-size:.52rem;font-weight:700;border-radius:50%;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;border:2px solid white;padding:0 2px}
+.scr-bell-badge.hidden{display:none!important}
+.scr-panel-wrap{position:fixed;bottom:0;right:24px;z-index:400;width:360px;display:none;flex-direction:column;filter:drop-shadow(0 -4px 24px rgba(0,0,0,.2))}
+.scr-panel-wrap.open{display:flex}
+@media(max-width:600px){.scr-panel-wrap{right:0;width:100%;bottom:60px}}
+.scr-chat-panel{background:white;border-radius:20px 20px 0 0;border:1px solid var(--brd);overflow:hidden;display:flex;flex-direction:column;max-height:580px}
+.scr-head{background:linear-gradient(135deg,#13305e 0%,#1c4480 100%);padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.scr-head-ico{width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.scr-head-title{font-size:.88rem;font-weight:700;color:white;line-height:1.2}
+.scr-head-sub{font-size:.65rem;color:rgba(255,255,255,.55);margin-top:1px}
+.scr-head-close{margin-left:auto;background:rgba(255,255,255,.15);border:none;color:white;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.scr-head-close:hover{background:rgba(255,255,255,.3)}
+.scr-steps-bar{background:#13305e;flex-shrink:0;padding:8px 0 6px}
+.scr-steps{display:flex;gap:4px;justify-content:center;margin-bottom:3px}
+.scr-sdot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
+.scr-sdot.done{background:#25D366}
+.scr-sdot.active{background:white;transform:scale(1.3)}
+.scr-slbls{display:flex;justify-content:center}
+.scr-slbl{font-size:.56rem;color:rgba(255,255,255,.35);text-align:center;width:52px;text-transform:uppercase;letter-spacing:.04em;transition:color .3s}
+.scr-slbl.active{color:white}
+.scr-slbl.done{color:rgba(255,255,255,.5)}
+.scr-msgs{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}
+.scr-msgs::-webkit-scrollbar{width:3px}
+.scr-msgs::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+.scr-m{display:flex;flex-direction:column;animation:scrMsgIn .22s ease both}
+@keyframes scrMsgIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.scr-m.bot{align-items:flex-start}
+.scr-m.usr{align-items:flex-end}
+.scr-bub{max-width:86%;padding:8px 12px;border-radius:14px;font-size:.8rem;line-height:1.5}
+.scr-m.bot .scr-bub{background:#f2f6fd;border:1px solid #d3dff0;color:#0b1d3a;border-bottom-left-radius:3px}
+.scr-m.usr .scr-bub{background:linear-gradient(135deg,#13305e,#1c4480);color:white;border-bottom-right-radius:3px}
+.scr-opts{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;max-width:92%}
+.scr-opt{padding:5px 12px;border-radius:18px;border:1.5px solid #3b82c4;background:white;color:#3b82c4;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
+.scr-opt:hover{background:#3b82c4;color:white;transform:translateY(-1px)}
+.scr-opt:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.scr-opt.sc1{border-color:#0e7a4b;color:#0e7a4b}.scr-opt.sc1:hover{background:#0e7a4b;color:white}
+.scr-opt.sc2{border-color:#1c4480;color:#1c4480}.scr-opt.sc2:hover{background:#1c4480;color:white}
+.scr-opt.scoff{border-color:#b45309;color:#b45309}.scr-opt.scoff:hover{background:#b45309;color:white}
+.scr-dw{display:flex;flex-direction:column;gap:5px;margin-top:5px;max-width:92%}
+.scr-di{padding:7px 11px;border:1.5px solid #3b82c4;border-radius:9px;font-family:'Inter',sans-serif;font-size:.8rem;color:#0b1d3a;outline:none;width:100%;background:white}
+.scr-di:focus{box-shadow:0 0 0 3px rgba(59,130,196,.15)}
+.scr-sum{background:#f2f6fd;border:1.5px solid #d3dff0;border-radius:11px;padding:11px 13px;font-size:.78rem;margin-top:4px;max-width:96%}
+.scr-sum-row{display:flex;justify-content:space-between;align-items:flex-start;padding:3px 0;border-bottom:1px solid #d3dff0;gap:8px}
+.scr-sum-row:last-child{border-bottom:none}
+.scr-sum-row .rl{color:#6b82a8;font-size:.7rem;flex-shrink:0}
+.scr-sum-row .rv{font-weight:600;text-align:right;color:#0b1d3a}
+.scr-sbdg{display:inline-block;padding:2px 8px;border-radius:9px;font-size:.7rem;font-weight:700;color:white}
+.scr-sbdg.sc1{background:#0e7a4b}.scr-sbdg.sc2{background:#1c4480}.scr-sbdg.scoff{background:#b45309}
+.scr-typing-wrap{display:flex;gap:4px;align-items:center;padding:9px 13px;background:#f2f6fd;border:1px solid #d3dff0;border-radius:14px;border-bottom-left-radius:3px;width:fit-content}
+.scr-dot{width:6px;height:6px;border-radius:50%;background:#6b82a8;animation:scrDot 1.2s infinite ease-in-out}
+.scr-dot:nth-child(2){animation-delay:.2s}.scr-dot:nth-child(3){animation-delay:.4s}
+@keyframes scrDot{0%,80%,100%{transform:scale(.7);opacity:.5}40%{transform:scale(1);opacity:1}}
+.scr-inp-area{padding:9px 10px;border-top:1px solid var(--brd);display:flex;gap:7px;align-items:center;flex-shrink:0;background:white}
+.scr-inp-area textarea{flex:1;border:1.5px solid var(--brd2);border-radius:9px;padding:7px 11px;font-family:'Inter',sans-serif;font-size:.8rem;color:var(--txt);outline:none;resize:none;transition:border .15s}
+.scr-inp-area textarea:focus{border-color:#3b82c4}
+.scr-send{width:34px;height:34px;border-radius:9px;background:#3b82c4;border:none;color:white;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.scr-send:hover{background:#2d5f9e;transform:scale(1.05)}
+.scr-send:disabled{background:var(--brd2);cursor:not-allowed;transform:none}
+.scr-restart-bar{text-align:center;padding:6px;font-size:.7rem;color:var(--mt);border-top:1px solid var(--brd);background:white;flex-shrink:0}
+.scr-restart-bar a{color:#3b82c4;cursor:pointer}.scr-restart-bar a:hover{text-decoration:underline}
+.scr-req-card{background:var(--surf);border:1.5px solid var(--brd);border-radius:11px;padding:12px 13px;font-size:.78rem;margin-bottom:10px}
+.scr-req-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.scr-req-name{font-weight:700;color:var(--txt);font-size:.83rem}
+.scr-req-pill{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:9px;text-transform:uppercase;letter-spacing:.05em}
+.scr-req-pill.pending{background:#fff3e0;color:#c2410c;border:1px solid #f97316}
+.scr-req-pill.approved{background:#ecfdf5;color:#065f46;border:1px solid #10b981}
+.scr-req-pill.rejected{background:#fef2f2;color:#991b1b;border:1px solid #ef4444}
+.scr-req-rows{display:flex;flex-direction:column;gap:3px;margin-bottom:9px}
+.scr-req-row{display:flex;gap:5px;font-size:.75rem}
+.scr-req-row .rl{color:var(--mt);width:62px;flex-shrink:0}
+.scr-req-row .rv{color:var(--txt);font-weight:500}
+.scr-req-acts{display:flex;gap:6px}
+.scr-req-btn{flex:1;padding:6px 0;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s}
+.scr-req-btn.appr{background:#ecfdf5;color:#065f46;border:1.5px solid #10b981}
+.scr-req-btn.rejt{background:#fef2f2;color:#991b1b;border:1.5px solid #ef4444}
+.scr-req-btn.appr:hover{background:#10b981;color:white}
+.scr-req-btn.rejt:hover{background:#ef4444;color:white}
+.scr-req-btn:disabled{opacity:.4;cursor:not-allowed}
+.scr-req-note{font-size:.7rem;color:#065f46;font-style:italic;margin-top:5px}
+.scr-req-note.rejt{color:#991b1b}
+/* ── SHIFT CHANGE FAB ── */
+.scr-fab-btn{display:none;position:fixed;bottom:24px;right:24px;z-index:390;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#13305e,#1c4480);border:none;color:white;cursor:pointer;box-shadow:0 4px 18px rgba(19,48,94,.45);align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
+.scr-fab-btn:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(19,48,94,.6)}
+.scr-fab-btn.visible{display:flex}
+@media(max-width:600px){.scr-fab-btn{bottom:76px;right:14px}}
+/* ══ END SHIFT CHANGE REQUEST ══ */
 </style>
 </head>
 <body>
@@ -281,6 +370,10 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
     </div>
     <div class="tb-right">
       <div class="db-st"><div class="db-dot ld" id="db-dot"></div><span id="db-lbl">...</span></div>
+      <div class="scr-bell-wrap" onclick="aNav('shiftreq')" title="Shift Change Approvals">
+        <button class="btn-ico">🔔</button>
+        <div class="scr-bell-badge hidden" id="adm-scr-badge">0</div>
+      </div>
       <input type="date" class="inp inp-sm" id="a-date" style="width:auto" onchange="aRender()"/>
       <button class="btn-ico" onclick="toggleTheme()">🌙</button>
       <button class="btn btn-s btn-sm" onclick="doLogout()">Sign out</button>
@@ -299,10 +392,11 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
       <button class="ni" id="an-att" onclick="aNav('att')"><span class="ni-ico">🕐</span>Attendance</button>
       <button class="ni" id="an-shifts" onclick="aNav('shifts')"><span class="ni-ico">📅</span>Shift Planner</button>
       <div class="nsec">Management</div>
+      <button class="ni" id="an-shiftreq" onclick="aNav('shiftreq')"><span class="ni-ico">🔄</span>Shift Requests<span class="scr-bell-badge hidden" id="adm-scr-badge-nav" style="position:relative;top:auto;right:auto;margin-left:auto;min-width:16px;height:16px;font-size:.52rem;display:none;align-items:center;justify-content:center;background:#ef4444;color:white;border-radius:50%;padding:0 2px;font-weight:700" id="adm-scr-badge-nav">0</span></button>
       <button class="ni" id="an-staff" onclick="aNav('staff')"><span class="ni-ico">👥</span>All Staff</button>
       <button class="ni" id="an-quality" onclick="aNav('quality')"><span class="ni-ico">⚠️</span>Quality & Errors</button>
-      <button class="ni" id="an-rel" onclick="aNav('rel')"><span class="ni-ico">⭐</span>Reliability</button>
-      <button class="ni" id="an-prod" onclick="aNav('prod')"><span class="ni-ico">📋</span>Producers</button>
+    <!-- AFTER -->
+<button class="mob-btn" id="am-rel" onclick="aNav('rel')" style="display:none"><span class="mi">⭐</span>Reliability</button>      <button class="ni" id="an-prod" onclick="aNav('prod')"><span class="ni-ico">📋</span>Producers</button>
       <div class="nsec">Reports</div>
       <button class="ni" id="an-report" onclick="aNav('report')"><span class="ni-ico">📈</span>Full Report</button>
       <div class="nsec" id="an-switch-sec" style="display:none">Switch Role</div>
@@ -317,6 +411,7 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
       <div id="at-today" style="display:none"></div>
       <div id="at-att" style="display:none"></div>
       <div id="at-shifts" style="display:none"></div>
+      <div id="at-shiftreq" style="display:none"></div>
       <div id="at-staff" style="display:none"></div>
       <div id="at-quality" style="display:none"></div>
       <div id="at-rel" style="display:none"></div>
@@ -333,14 +428,57 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
     <button class="mob-btn" id="am-today" onclick="aNav('today')"><span class="mi">👁</span>Today</button>
     <button class="mob-btn" id="am-att" onclick="aNav('att')"><span class="mi">🕐</span>Attend</button>
     <button class="mob-btn" id="am-shifts" onclick="aNav('shifts')"><span class="mi">📅</span>Shifts</button>
+    <button class="mob-btn" id="am-shiftreq" onclick="aNav('shiftreq')"><span class="mi">🔄</span>Shifts Req</button>
     <button class="mob-btn" id="am-staff" onclick="aNav('staff')"><span class="mi">👥</span>Staff</button>
     <button class="mob-btn" id="am-quality" onclick="aNav('quality')"><span class="mi">⚠️</span>Quality</button>
-    <button class="mob-btn" id="am-rel" onclick="aNav('rel')"><span class="mi">⭐</span>Reliability</button>
+<!-- AFTER -->
+<button class="mob-btn" id="am-rel" onclick="aNav('rel')" style="display:none"><span class="mi">⭐</span>Reliability</button>
     <button class="mob-btn" id="am-prod" onclick="aNav('prod')"><span class="mi">📋</span>Producers</button>
     <button class="mob-btn" id="am-report" onclick="aNav('report')"><span class="mi">📈</span>Report</button>
     <button class="mob-btn" id="am-switch" style="display:none;color:var(--purple)" onclick="switchToEmpView()"><span class="mi">👤</span>Emp View</button>
   </div></div>
 </div>
+
+<!-- ══ SHIFT CHANGE REQUEST CHATBOT ══ -->
+<div class="scr-panel-wrap" id="scr-panel-wrap">
+  <div class="scr-chat-panel">
+    <div class="scr-head">
+      <div class="scr-head-ico">🔄</div>
+      <div style="flex:1">
+        <div class="scr-head-title">Shift Change Request</div>
+        <div class="scr-head-sub">TAMILJANAM Newsroom Scheduler</div>
+      </div>
+      <button class="scr-head-close" onclick="scrClose()">✕</button>
+    </div>
+    <div class="scr-steps-bar">
+      <div class="scr-steps">
+        <div class="scr-sdot active" id="ssd0"></div>
+        <div class="scr-sdot" id="ssd1"></div>
+        <div class="scr-sdot" id="ssd2"></div>
+        <div class="scr-sdot" id="ssd3"></div>
+        <div class="scr-sdot" id="ssd4"></div>
+      </div>
+      <div class="scr-slbls">
+        <div class="scr-slbl active" id="ssl0">Start</div>
+        <div class="scr-slbl" id="ssl1">End</div>
+        <div class="scr-slbl" id="ssl2">Shift</div>
+        <div class="scr-slbl" id="ssl3">Reason</div>
+        <div class="scr-slbl" id="ssl4">Submit</div>
+      </div>
+    </div>
+    <div class="scr-msgs" id="scr-msgs"></div>
+    <div class="scr-inp-area" id="scr-inp-area" style="display:none">
+      <textarea id="scr-inp" rows="1" placeholder="Type here…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();scrSendReason();}"></textarea>
+      <button class="scr-send" id="scr-send-btn" onclick="scrSendReason()">➤</button>
+    </div>
+    <div class="scr-restart-bar"><a onclick="scrRestart()">🔄 Start fresh</a></div>
+  </div>
+</div>
+<!-- ══ END SHIFT CHANGE REQUEST CHATBOT ══ -->
+
+<!-- SHIFT CHANGE FAB -->
+<button id="scr-fab" onclick="scrOpen()" title="Shift Change Request" class="scr-fab-btn"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3C8.477 3 4 7.254 4 12.5c0 2.196.78 4.22 2.075 5.822L4.5 22l4.2-1.3A10.22 10.22 0 0014 22c5.523 0 10-4.254 10-9.5S19.523 3 14 3z" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.5)" stroke-width="1.3"/><circle cx="10" cy="12.5" r="1.4" fill="white"/><circle cx="14" cy="12.5" r="1.4" fill="white"/><circle cx="18" cy="12.5" r="1.4" fill="white"/><path d="M21 5.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="white" opacity="0.9"/></svg></button>
 
 <!-- SHIFT CONFIRM MODAL -->
 <div class="mo" id="sh-mo">
@@ -1060,6 +1198,11 @@ async function afterLogin(session){
 async function doLogout(){
   await sb.auth.signOut();
   ME=null;EMPS=[];DAILY={};BREAKS={};QUALITY={};RELIABILITY={};PROD_DAILY={};ATTENDANCE={};SHIFTS={};
+  // Reset chatbot state
+  scrResetState();
+  const msgs=$("scr-msgs"); if(msgs) msgs.innerHTML="";
+  const panel=$("scr-panel-wrap"); if(panel) panel.classList.remove("open");
+  const fab=$("scr-fab"); if(fab) fab.classList.remove("visible");
   show("s-login");
 }
 
@@ -1072,6 +1215,8 @@ function openEmp(){
   $("e-dept").style.color=deptColor(ME.dept);
   $("e-dept").textContent=ME.id+" · "+ME.dept;
   $("e-date").value=todayStr();
+  // Show shift change FAB for employee view
+  const fab=$("scr-fab"); if(fab) fab.classList.add("visible");
   // Show "Admin Dashboard" switch for dual-role (admin + employee) users
   if(ME.role==="admin" && ME.hasEmpRecord){
     const sw=$("en-switch"),ss=$("en-switch-sec"),ms=$("em-switch");
@@ -1295,10 +1440,18 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
 }
 
 // NLE ACTIONS
-function nleAddItem(empId, date, container, dept){
+// AFTER
+async function nleAddItem(empId, date, container, dept){
   if(!DAILY[empId])DAILY[empId]={};
   if(!DAILY[empId][date])DAILY[empId][date]=[];
-  DAILY[empId][date].push({type:"vo_sot",desc:"",startTime:"",endTime:"",manualMins:0});
+  const existing=DAILY[empId][date];
+  // save the last item only (the one just filled before clicking Add New)
+  if(existing.length){
+    const last=existing[existing.length-1];
+    await sbSaveNLEItem(empId,date,last);
+    toast("✓ Item "+existing.length+" saved");
+  }
+  existing.push({type:"vo_sot",desc:"",startTime:"",endTime:"",manualMins:0});
   renderDailyEntry(empId,dept,date,container,false);
 }
 
@@ -1439,7 +1592,7 @@ function renderScore(){
 // ══════════════════════════════════════════════
 // HISTORY TAB
 // ══════════════════════════════════════════════
-function renderHistory(){
+async function renderHistory(){
   const days=Object.keys(DAILY[ME.id]||{}).sort().reverse().slice(0,30);
   let html=`<div class="sec-hdr"><div class="sec-title">History</div><div class="sec-sub">Last 30 days</div></div>`;
   if(!days.length){html+=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">📅</div>No history yet</div>`;}
@@ -1458,6 +1611,38 @@ function renderHistory(){
       </div>
     </div>`;
   });
+
+  // Shift change requests — show approved/rejected where end_date >= today (not yet passed)
+  const today=todayStr();
+  html+=`<div class="sec-hdr" style="margin-top:20px"><div class="sec-title" style="font-size:14px">🔄 My Shift Change Requests</div><div class="sec-sub">Upcoming & recent</div></div>`;
+  const {data:reqs,error}=await sb.from("shift_change_requests")
+    .select("*")
+    .eq("employee_id",ME.id)
+    .in("status",["approved","rejected"])
+    .gte("end_date",today)
+    .order("start_date",{ascending:true});
+  if(error||!reqs||!reqs.length){
+    html+=`<div class="card" style="text-align:center;padding:20px;color:var(--mt);font-size:12px">No upcoming approved or rejected shift requests.</div>`;
+  } else {
+    const shiftLbl={"1ST":"🌅 1st Shift","2ND":"🌙 2nd Shift","OFF":"🏖️ Off"};
+    reqs.forEach(r=>{
+      const isApproved=r.status==="approved";
+      const bg=isApproved?"var(--gl)":"rgba(239,68,68,.06)";
+      const brd=isApproved?"var(--green)":"#fca5a5";
+      const statusColor=isApproved?"#059669":"#ef4444";
+      const dateRange=r.start_date===r.end_date?scrFmtD(r.start_date):scrFmtD(r.start_date)+" → "+scrFmtD(r.end_date);
+      html+=`<div class="card-sm" style="margin-bottom:8px;background:${bg};border:1.5px solid ${brd}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;margin-bottom:2px">${shiftLbl[r.requested_shift]||r.requested_shift}</div>
+            <div style="font-size:11px;color:var(--mt)">${dateRange}</div>
+            ${r.reason?`<div style="font-size:11px;color:var(--mt);font-style:italic;margin-top:2px">"${r.reason}"</div>`:""}
+          </div>
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;background:${statusColor};color:#fff;flex-shrink:0">${r.status.toUpperCase()}</span>
+        </div>
+      </div>`;
+    });
+  }
   $("et-history").innerHTML=html;
 }
 
@@ -1522,6 +1707,9 @@ function openAdmin(){
   show("s-admin");
   $("a-date").value=todayStr();
   setDbSt("ok","Connected ✓");
+  scrLoadPendingCount();
+  // Hide shift change FAB in admin view
+  const fab=$("scr-fab"); if(fab) fab.classList.remove("visible");
   // Hide "My Work" tab if admin has no linked employee record (e.g. maintenance/developer)
   const myWorkNav=$("an-mywork");
   const myWorkMob=$("am-mywork");
@@ -1548,7 +1736,7 @@ function openAdmin(){
 
 function aNav(tab){
   aTab=tab;
-  const tabs=["mywork","mybreaks","myscore","myhistory","overview","today","att","shifts","staff","quality","rel","prod","report"];
+  const tabs=["mywork","mybreaks","myscore","myhistory","overview","today","att","shifts","shiftreq","staff","quality","rel","prod","report"];
   tabs.forEach(t=>{
     const el=$("at-"+t);if(el)el.style.display=t===tab?"block":"none";
     const n=$("an-"+t);if(n)n.classList.toggle("active",t===tab);
@@ -1567,6 +1755,7 @@ function aRender(){
   else if(aTab==="today")renderToday(d);
   else if(aTab==="att")renderAttendance(d);
   else if(aTab==="shifts")renderShifts();
+  else if(aTab==="shiftreq")renderShiftRequests();
   else if(aTab==="staff")renderStaff();
   else if(aTab==="quality")renderQuality(d);
   else if(aTab==="rel")renderReliability();
@@ -1597,7 +1786,7 @@ function renderOverview(dateStr){
       <div style="width:8px;height:8px;border-radius:50%;background:${items.length?"var(--green)":"var(--dim)"}"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortN(e.name)}</div>
-        <div style="font-size:10px;color:var(--mt);font-family:'JetBrains Mono'">${items.length?items.length+" items · "+wpts+" pts":"No entry"}</div>
+        <div style="font-size:10px;color:var(--mt);font-family:'JetBrains Mono'">${items.length?items.length+" items · "+wpts+" pts":"Absent"}</div>
       </div>
     </div>`;
   });
@@ -2122,36 +2311,111 @@ function renderProducers(dateStr){
 }
 
 // ── FULL REPORT ──
+function rptLocalStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+
 function renderReport(){
   const now=new Date();
-  const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  const monthLabel=now.toLocaleString("en-IN",{month:"long",year:"numeric"});
+  const today=rptLocalStr(now);
+  const dow=now.getDay()||7; // 1=Mon..7=Sun
+  const monDate=new Date(now); monDate.setDate(now.getDate()-(dow-1));
+  const weekFrom=rptLocalStr(monDate);
+  const monthFrom=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
+
+  $("at-report").innerHTML=`
+    <div class="sec-hdr">
+      <div><div class="sec-title">Full MIS Report</div><div class="sec-sub" id="rpt-sub">Today's Report</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-p rpt-pill" id="rpt-today" onclick="rptPreset('today','${today}','${today}')">📅 Today</button>
+          <button class="btn btn-s rpt-pill" id="rpt-week"  onclick="rptPreset('week','${weekFrom}','${today}')">📆 This Week</button>
+          <button class="btn btn-s rpt-pill" id="rpt-month" onclick="rptPreset('month','${monthFrom}','${today}')">🗓 This Month</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;border-left:2px solid var(--brd);padding-left:10px">
+          <div><label class="lbl" style="font-size:10px">From</label><input class="inp" type="date" id="rpt-from" value="${today}" style="width:148px" onchange="rptClearPill()"/></div>
+          <div><label class="lbl" style="font-size:10px">To</label><input class="inp" type="date" id="rpt-to" value="${today}" style="width:148px" onchange="rptClearPill()"/></div>
+          <button class="btn btn-p" onclick="renderReportRange()">📈 Generate</button>
+        </div>
+      </div>
+    </div>
+    <div id="rpt-range-out"></div>`;
+
+  renderReportRange(); // auto-show today
+}
+
+function rptPreset(key,from,to){
+  document.querySelectorAll(".rpt-pill").forEach(b=>{b.classList.remove("btn-p");b.classList.add("btn-s");});
+  const btn=$("rpt-"+key); if(btn){btn.classList.add("btn-p");btn.classList.remove("btn-s");}
+  const fi=$("rpt-from"),ti=$("rpt-to");
+  if(fi)fi.value=from; if(ti)ti.value=to;
+  const lbls={"today":"Today's Report","week":"This Week's Report","month":"This Month's Report"};
+  const sub=$("rpt-sub"); if(sub)sub.textContent=lbls[key]||"Report";
+  renderReportRange();
+}
+
+function rptClearPill(){
+  document.querySelectorAll(".rpt-pill").forEach(b=>{b.classList.remove("btn-p");b.classList.add("btn-s");});
+  const sub=$("rpt-sub"); if(sub)sub.textContent="Custom Range Report";
+}
+
+function renderReportRange(){
+  const fromDate=$("rpt-from")?.value;
+  const toDate=$("rpt-to")?.value;
+  if(!fromDate||!toDate){toast("Please select both dates","er");return;}
+  if(fromDate>toDate){toast("From date must be before To date","er");return;}
+
+  const rangeLabel=`${new Date(fromDate+"T00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})} → ${new Date(toDate+"T00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}`;
+
+  function inRange(d){ return d>=fromDate && d<=toDate; }
 
   const DCFG=[
-    {dept:"NLE Editor",    hex:"#2563eb", icon:"🎬", fields:NEWS_TYPES,
-     getData:(e)=>{const days=Object.keys(DAILY[e.id]||{}).filter(d=>d.startsWith(monthKey));let wpts=0,items=0,mins=0;const fc=Object.fromEntries(NEWS_TYPES.map(n=>[n.key,0]));days.forEach(d=>(DAILY[e.id][d]||[]).forEach(it=>{if(fc[it.type]!==undefined)fc[it.type]++;const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};wpts+=nt.weight;items++;mins+=tdiff(it.startTime,it.endTime)??it.manualMins??0;}));return{fc,wpts,items,mins};},showTime:true},
-    {dept:"News Producer", hex:"#0891b2", icon:"📋", fields:PROD_FIELDS,
-     getData:(e)=>{const days=Object.keys(PROD_DAILY[e.id]||{}).filter(d=>d.startsWith(monthKey));let wpts=0,items=0;const fc=Object.fromEntries(PROD_FIELDS.map(f=>[f.key,0]));days.forEach(d=>{const pd=PROD_DAILY[e.id][d]||{};PROD_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;fc[f.key]+=v;items+=v;wpts+=v;});});return{fc,wpts,items,mins:0};},showTime:false},
-    {dept:"Voice Over",    hex:"#059669", icon:"🎤", fields:VO_FIELDS,
-     getData:(e)=>{const days=Object.keys(PROD_DAILY[e.id]||{}).filter(d=>d.startsWith(monthKey));let wpts=0,items=0;const fc=Object.fromEntries(VO_FIELDS.map(f=>[f.key,0]));days.forEach(d=>{const pd=PROD_DAILY[e.id][d]||{};VO_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;fc[f.key]+=v;items+=v;wpts+=v;});});return{fc,wpts,items,mins:0};},showTime:false},
+    {dept:"NLE Editor",hex:"#2563eb",icon:"🎬",fields:NEWS_TYPES,
+     getData:(e)=>{const days=Object.keys(DAILY[e.id]||{}).filter(inRange);let wpts=0,items=0,mins=0;const fc=Object.fromEntries(NEWS_TYPES.map(n=>[n.key,0]));days.forEach(d=>(DAILY[e.id][d]||[]).forEach(it=>{if(fc[it.type]!==undefined)fc[it.type]++;const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};wpts+=nt.weight;items++;mins+=tdiff(it.startTime,it.endTime)??it.manualMins??0;}));return{fc,wpts,items,mins};},showTime:true},
+    {dept:"News Producer",hex:"#0891b2",icon:"📋",fields:PROD_FIELDS,
+     getData:(e)=>{const days=Object.keys(PROD_DAILY[e.id]||{}).filter(inRange);let wpts=0,items=0;const fc=Object.fromEntries(PROD_FIELDS.map(f=>[f.key,0]));days.forEach(d=>{const pd=PROD_DAILY[e.id][d]||{};PROD_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;fc[f.key]+=v;items+=v;wpts+=v;});});return{fc,wpts,items,mins:0};},showTime:false},
+    {dept:"Voice Over",hex:"#059669",icon:"🎤",fields:VO_FIELDS,
+     getData:(e)=>{const days=Object.keys(PROD_DAILY[e.id]||{}).filter(inRange);let wpts=0,items=0;const fc=Object.fromEntries(VO_FIELDS.map(f=>[f.key,0]));days.forEach(d=>{const pd=PROD_DAILY[e.id][d]||{};VO_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;fc[f.key]+=v;items+=v;wpts+=v;});});return{fc,wpts,items,mins:0};},showTime:false},
   ];
 
-  let html=`<div class="sec-hdr">
-    <div><div class="sec-title">Full MIS Report</div><div class="sec-sub">${monthLabel}</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-s" onclick="exportExcel()">📊 Excel</button>
-      <button class="btn btn-s" onclick="exportImg()">🖼 Image</button>
-    </div>
+  // For score calc over date range — use a range-aware score
+  function calcScoreRange(empId,dept){
+    const days=Object.keys(DAILY[empId]||{}).filter(inRange);
+    const pdays=Object.keys(PROD_DAILY[empId]||{}).filter(inRange);
+    let wpts=0,items=0;
+    if(dept==="NLE Editor"){days.forEach(d=>(DAILY[empId][d]||[]).forEach(it=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};wpts+=nt.weight;items++;}));}
+    else if(dept==="News Producer"){pdays.forEach(d=>{const pd=PROD_DAILY[empId][d]||{};PROD_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;wpts+=v;items+=v;});});}
+    else if(dept==="Voice Over"){pdays.forEach(d=>{const pd=PROD_DAILY[empId][d]||{};VO_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;wpts+=v;items+=v;});});}
+    const outputScore=Math.min(100,Math.round(wpts/1.5));
+    let qualDeduct=0;
+    Object.keys(QUALITY[empId]||{}).filter(inRange).forEach(d=>{
+      const q=QUALITY[empId][d]||{};
+      QUALITY_ITEMS.filter(qi=>qi.depts.includes(dept)).forEach(qi=>qualDeduct+=Math.abs(qi.pts)*(parseInt(q[qi.key])||0));
+    });
+    const qualityScore=Math.max(0,100-qualDeduct);
+    // Reliability — use latest available month in range
+    const monthKey=toDate.slice(0,7);
+    const rData=RELIABILITY[empId]?.[monthKey]||{};
+    const relRaw=REL_ITEMS.reduce((s,r)=>s+(parseInt(rData[r.key])||7),0);
+    const reliScore=Math.round(relRaw/REL_ITEMS.length/10*100);
+    const creativityScore=(parseInt(rData.creativity)||5)*10;
+    const final=Math.round(qualityScore*0.4+outputScore*0.3+reliScore*0.2+creativityScore*0.1);
+    return{final,qualityScore,outputScore,reliScore,creativityScore,wpts,items};
+  }
+
+  let html=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn btn-s" onclick="exportExcelRange('${fromDate}','${toDate}')">📊 Excel</button>
+    <button class="btn btn-s" onclick="exportImg()">🖼 Image</button>
   </div>
   <div id="rpt-wrap" style="background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.06)">
     <div style="background:var(--grad);padding:16px 20px">
       <div style="font-size:16px;font-weight:800;color:#fff">TAMILJANAM NLE PRODUCTION</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.8)">MIS Report · ${monthLabel}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.8)">MIS Report · ${rangeLabel}</div>
     </div>`;
 
   DCFG.forEach(cfg=>{
     const emps=EMPS.filter(e=>e.is_active&&e.dept===cfg.dept);
-    const rows=emps.map(e=>{const d=cfg.getData(e);const sc=calcScore(e.id,e.dept,monthKey);return{emp:e,...d,sc};}).sort((a,b)=>b.wpts-a.wpts);
+    const rows=emps.map(e=>{const d=cfg.getData(e);const sc=calcScoreRange(e.id,e.dept);return{emp:e,...d,sc};}).sort((a,b)=>b.wpts-a.wpts);
     const tTotals=Object.fromEntries(cfg.fields.map(f=>[f.key,rows.reduce((s,r)=>s+(r.fc[f.key]||0),0)]));
     const tItems=rows.reduce((s,r)=>s+r.items,0);
     const tWpts=rows.reduce((s,r)=>s+r.wpts,0);
@@ -2204,28 +2468,66 @@ function renderReport(){
     <span>Generated: ${new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</span>
   </div></div>`;
 
-  $("at-report").innerHTML=html;
+  $("rpt-range-out").innerHTML=html;
+}
+
+function exportExcelRange(fromDate, toDate){
+  if(typeof XLSX==="undefined")return toast("XLSX lib not loaded","er");
+  const fd=fromDate||$("rpt-from")?.value;
+  const td=toDate||$("rpt-to")?.value;
+  if(!fd||!td){toast("Date range not set","er");return;}
+  function inRange(d){return d>=fd&&d<=td;}
+  const rangeLabel=`${fd}_to_${td}`;
+  const wb=XLSX.utils.book_new();
+
+  // NLE Editor sheet
+  const nleHeaders=["#","ID","Name",...NEWS_TYPES.map(n=>n.label),"Total Items","Weighted Pts","Mins","Score"];
+  const nleData=[nleHeaders];
+  EMPS.filter(e=>e.is_active&&e.dept==="NLE Editor").forEach((e,i)=>{
+    const days=Object.keys(DAILY[e.id]||{}).filter(inRange);
+    let wpts=0,items=0,mins=0;const tc=Object.fromEntries(NEWS_TYPES.map(n=>[n.key,0]));
+    days.forEach(d=>(DAILY[e.id][d]||[]).forEach(it=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};tc[it.type]=(tc[it.type]||0)+1;wpts+=nt.weight;items++;mins+=tdiff(it.startTime,it.endTime)??it.manualMins??0;}));
+    const sc=calcScore(e.id,e.dept,td.slice(0,7));
+    nleData.push([i+1,e.id,e.name,...NEWS_TYPES.map(n=>tc[n.key]||0),items,wpts,mins,sc.final]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(nleData),"NLE Editor");
+
+  // News Producer sheet
+  const npHeaders=["#","ID","Name",...PROD_FIELDS.map(f=>f.label),"Total","Score"];
+  const npData=[npHeaders];
+  EMPS.filter(e=>e.is_active&&e.dept==="News Producer").forEach((e,i)=>{
+    const days=Object.keys(PROD_DAILY[e.id]||{}).filter(inRange);
+    let items=0;const fc=Object.fromEntries(PROD_FIELDS.map(f=>[f.key,0]));
+    days.forEach(d=>{const pd=PROD_DAILY[e.id][d]||{};PROD_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;fc[f.key]+=v;items+=v;});});
+    const sc=calcScore(e.id,e.dept,td.slice(0,7));
+    npData.push([i+1,e.id,e.name,...PROD_FIELDS.map(f=>fc[f.key]||0),items,sc.final]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(npData),"News Producer");
+
+  // Voice Over sheet
+  const voHeaders=["#","ID","Name",...VO_FIELDS.map(f=>f.label),"Total","Score"];
+  const voData=[voHeaders];
+  EMPS.filter(e=>e.is_active&&e.dept==="Voice Over").forEach((e,i)=>{
+    const days=Object.keys(PROD_DAILY[e.id]||{}).filter(inRange);
+    let items=0;const fc=Object.fromEntries(VO_FIELDS.map(f=>[f.key,0]));
+    days.forEach(d=>{const pd=PROD_DAILY[e.id][d]||{};VO_FIELDS.forEach(f=>{const v=parseInt(pd[f.key])||0;fc[f.key]+=v;items+=v;});});
+    const sc=calcScore(e.id,e.dept,td.slice(0,7));
+    voData.push([i+1,e.id,e.name,...VO_FIELDS.map(f=>fc[f.key]||0),items,sc.final]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(voData),"Voice Over");
+
+  XLSX.writeFile(wb,`TJ_MIS_${rangeLabel}.xlsx`);
+  toast("✓ Excel downloaded");
 }
 
 function exportExcel(){
-  if(typeof XLSX==="undefined")return toast("XLSX lib not loaded","er");
+  const fromDate=$("rpt-from")?.value;
+  const toDate=$("rpt-to")?.value;
+  if(fromDate&&toDate){exportExcelRange(fromDate,toDate);return;}
+  // fallback: current month
   const now=new Date();
-  const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  const monthLabel=now.toLocaleString("en-IN",{month:"long",year:"numeric"});
-  const wb=XLSX.utils.book_new();
-  const headers=["#","Dept","ID","Name",...NEWS_TYPES.map(n=>n.label),"Total Items","Weighted Pts","Mins","Score"];
-  const data=[headers];
-  EMPS.filter(e=>e.is_active&&e.dept==="NLE Editor").forEach((e,i)=>{
-    const days=Object.keys(DAILY[e.id]||{}).filter(d=>d.startsWith(monthKey));
-    let wpts=0,items=0,mins=0;const tc=Object.fromEntries(NEWS_TYPES.map(n=>[n.key,0]));
-    days.forEach(d=>(DAILY[e.id][d]||[]).forEach(it=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};tc[it.type]=(tc[it.type]||0)+1;wpts+=nt.weight;items++;mins+=tdiff(it.startTime,it.endTime)??it.manualMins??0;}));
-    const sc=calcScore(e.id,e.dept,monthKey);
-    data.push([i+1,e.dept,e.id,e.name,...NEWS_TYPES.map(n=>tc[n.key]||0),items,wpts,mins,sc.final]);
-  });
-  const ws=XLSX.utils.aoa_to_sheet(data);
-  XLSX.utils.book_append_sheet(wb,"MIS",ws);
-  XLSX.writeFile(wb,`TJ_MIS_${monthLabel.replace(" ","_")}.xlsx`);
-  toast("✓ Excel downloaded");
+  const m=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  exportExcelRange(m+"-01",m+"-31");
 }
 
 async function exportImg(){
@@ -2275,6 +2577,320 @@ async function init(){
     if(event==="SIGNED_OUT"){show("s-login");}
   });
 }
+
+// ══════════════════════════════════════════════
+// SHIFT CHANGE REQUEST — EMPLOYEE CHATBOT
+// ══════════════════════════════════════════════
+const SCR_STATE = { step:0, data:{} };
+
+function scrResetState(){
+  SCR_STATE.step = 0;
+  SCR_STATE.data = { startDate:null, endDate:null, requestedShift:null, reason:"" };
+}
+
+function scrLocalDateStr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function scrMinDate(){ const d=new Date(); d.setDate(d.getDate()+1); return scrLocalDateStr(d); }
+function scrMaxDate(){ const d=new Date(); d.setDate(d.getDate()+21); return scrLocalDateStr(d); }
+
+function scrOpen(){
+  $("scr-panel-wrap").classList.add("open");
+  if(SCR_STATE.step===0) scrStart();
+}
+function scrClose(){ $("scr-panel-wrap").classList.remove("open"); }
+function scrRestart(){ scrResetState(); $("scr-msgs").innerHTML=""; setTimeout(scrStart,150); }
+
+function scrStart(){
+  scrResetState();
+  $("scr-msgs").innerHTML="";
+  scrHideInp();
+  scrSteps(0);
+  scrTypingThen(()=>{
+    scrBot(`👋 Hi <strong>${ME?.name||"there"}</strong>! Let's raise a <strong>Shift Change Request</strong>.\n\n📅 Pick your <strong>start date</strong>.\n<em style="font-size:.72rem;color:#6b82a8">Tomorrow earliest · Max 21 days ahead</em>`);
+    scrDatePick(scrMinDate(), scrMinDate(), scrMaxDate(), val=>{
+      SCR_STATE.data.startDate=val;
+      scrUserMsg(scrFmtD(val));
+      scrMoveEndDate();
+    });
+  });
+}
+
+function scrMoveEndDate(){
+  SCR_STATE.step=1; scrSteps(1);
+  scrTypingThen(()=>{
+    scrBot(`📅 Now pick the <strong>end date</strong>.\n<em style="font-size:.72rem;color:#6b82a8">Same as start = single day · Max 21 days ahead</em>`);
+    scrDatePick(SCR_STATE.data.startDate, SCR_STATE.data.startDate, scrMaxDate(), val=>{
+      if(val < SCR_STATE.data.startDate){ scrBot("⚠️ End date cannot be before start date. Please pick again."); scrMoveEndDate(); return; }
+      SCR_STATE.data.endDate=val;
+      scrUserMsg(scrFmtD(val));
+      scrMoveShift();
+    });
+  });
+}
+
+function scrMoveShift(){
+  SCR_STATE.step=2; scrSteps(2);
+  scrTypingThen(()=>{
+    const d=SCR_STATE.data;
+    const range=d.startDate===d.endDate?`on <strong>${scrFmtD(d.startDate)}</strong>`:`from <strong>${scrFmtD(d.startDate)}</strong> to <strong>${scrFmtD(d.endDate)}</strong>`;
+    scrBot(`🕐 Which shift are you requesting ${range}?`);
+    const wrap=document.createElement("div"); wrap.className="scr-m bot";
+    const opts=document.createElement("div"); opts.className="scr-opts";
+    [{label:"🌅 1st Shift",value:"1ST",cls:"sc1"},{label:"🌙 2nd Shift",value:"2ND",cls:"sc2"},{label:"🏖️ Off",value:"OFF",cls:"scoff"}].forEach(s=>{
+      const btn=document.createElement("button");
+      btn.className="scr-opt "+s.cls; btn.textContent=s.label;
+      btn.onclick=()=>{ scrUserMsg(s.label); opts.querySelectorAll(".scr-opt").forEach(b=>b.disabled=true); SCR_STATE.data.requestedShift=s.value; scrMoveReason(); };
+      opts.appendChild(btn);
+    });
+    wrap.appendChild(opts); $("scr-msgs").appendChild(wrap); scrScroll();
+  });
+}
+
+function scrMoveReason(){
+  SCR_STATE.step=3; scrSteps(3);
+  scrTypingThen(()=>{
+    scrBot(`📝 Any reason? <em style="font-size:.72rem;color:#6b82a8">(Optional — press ➤ to skip)</em>`);
+    scrShowInp("Type reason or skip…");
+  });
+}
+
+function scrSendReason(){
+  if(SCR_STATE.step!==3) return;
+  const inp=$("scr-inp"); const val=inp.value.trim(); inp.value="";
+  SCR_STATE.data.reason=val||"";
+  if(val) scrUserMsg(val);
+  scrHideInp(); scrMoveSummary();
+}
+
+function scrMoveSummary(){
+  SCR_STATE.step=4; scrSteps(4,true);
+  scrTypingThen(()=>{
+    const d=SCR_STATE.data;
+    const shiftLbl={"1ST":"🌅 1st Shift","2ND":"🌙 2nd Shift","OFF":"🏖️ Off"}[d.requestedShift];
+    const shiftCls={"1ST":"sc1","2ND":"sc2","OFF":"scoff"}[d.requestedShift];
+    const dateRange=d.startDate===d.endDate?scrFmtD(d.startDate):`${scrFmtD(d.startDate)} → ${scrFmtD(d.endDate)}`;
+    scrBot("📋 Here's your shift change request:");
+    const wrap=document.createElement("div"); wrap.className="scr-m bot";
+    const card=document.createElement("div"); card.className="scr-sum";
+    [["Employee",ME?.name||"—"],["Date(s)",dateRange],["Requested",`<span class="scr-sbdg ${shiftCls}">${shiftLbl}</span>`],["Reason",d.reason||"<em style='color:#6b82a8'>—</em>"]].forEach(([l,v])=>{
+      const row=document.createElement("div"); row.className="scr-sum-row";
+      row.innerHTML=`<span class="rl">${l}</span><span class="rv">${v}</span>`; card.appendChild(row);
+    });
+    wrap.appendChild(card); $("scr-msgs").appendChild(wrap); scrScroll();
+    setTimeout(()=>{
+      scrOpts(["✅ Submit Request","🔄 Start Fresh"], choice=>{ if(choice==="🔄 Start Fresh"){scrRestart();return;} scrSubmit(); });
+    },300);
+  });
+}
+
+async function scrSubmit(){
+  scrTypingThen(async()=>{
+    const d=SCR_STATE.data;
+    const{error}=await sb.from("shift_change_requests").insert({
+      employee_id:ME.id, employee_name:ME.name, dept:ME.dept,
+      start_date:d.startDate, end_date:d.endDate,
+      requested_shift:d.requestedShift, reason:d.reason||"", status:"pending"
+    });
+    if(error){ scrBot("❌ Submission failed: "+error.message); return; }
+    const shiftLbl={"1ST":"1st Shift","2ND":"2nd Shift","OFF":"Off"}[d.requestedShift];
+    const dateRange=d.startDate===d.endDate?scrFmtD(d.startDate):`${scrFmtD(d.startDate)} to ${scrFmtD(d.endDate)}`;
+    scrBot(`✅ <strong>Request submitted!</strong>\n\nYou have requested <strong>${shiftLbl}</strong> for ${dateRange}.\n\nYour admin will review and approve or reject. It will reflect in your shift schedule once approved.`);
+    SCR_STATE.step="done";
+    toast("✓ Shift change request submitted");
+    setTimeout(()=>{ scrOpts(["➕ New Request"],()=>scrRestart()); },400);
+  },800);
+}
+
+// ══════════════════════════════════════════════
+// SHIFT CHANGE REQUEST — ADMIN APPROVAL
+// ══════════════════════════════════════════════
+async function renderShiftRequests(){
+  const el=$("at-shiftreq"); if(!el) return;
+  el.innerHTML=`<div class="sec-hdr"><div><div class="sec-title">Shift Change Requests</div><div class="sec-sub">Review and approve employee shift requests</div></div></div>`;
+
+  const{data:reqs,error}=await sb.from("shift_change_requests").select("*").order("submitted_at",{ascending:false});
+  if(error){ el.innerHTML+=`<div class="card" style="color:var(--red)">Failed to load: ${error.message}</div>`; return; }
+
+  const allReqs=reqs||[];
+  const pendingCount=allReqs.filter(r=>r.status==="pending").length;
+  scrUpdateBell(pendingCount);
+
+  const pendingReqs=allReqs.filter(r=>r.status==="pending");
+
+  if(!allReqs.length){
+    el.innerHTML+=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">🎉</div>No shift change requests yet.</div>`;
+    return;
+  }
+  if(!pendingReqs.length){
+    el.innerHTML+=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">✅</div><div style="font-weight:600;margin-bottom:4px">All caught up!</div><div style="font-size:12px">No pending shift change requests.</div></div>`;
+    return;
+  }
+
+  el.innerHTML+=`<div class="card" style="background:var(--al);border-color:rgba(217,119,6,.3);margin-bottom:16px">
+    <div style="font-weight:700;color:var(--amber);margin-bottom:10px">🔔 ${pendingCount} pending request${pendingCount>1?"s":""} awaiting your approval</div>
+    <input class="inp" type="text" id="scr-name-filter" placeholder="🔍 Filter by employee name…" style="font-size:12px;width:100%" oninput="scrFilterByName(this.value)"/>
+  </div>`;
+
+  const shiftLbl={"1ST":"🌅 1st Shift","2ND":"🌙 2nd Shift","OFF":"🏖️ Off"};
+  const shiftCls={"1ST":"sc1","2ND":"sc2","OFF":"scoff"};
+
+  pendingReqs.forEach(req=>{
+    const dateRange=req.start_date===req.end_date?scrFmtD(req.start_date):`${scrFmtD(req.start_date)} → ${scrFmtD(req.end_date)}`;
+    const card=document.createElement("div"); card.className="scr-req-card"; card.id="scr-req-"+req.id; card.dataset.empname=(req.employee_name||"").toLowerCase();
+    card.innerHTML=`
+      <div class="scr-req-hdr">
+        <div class="scr-req-name">${req.employee_name}</div>
+        <div class="scr-req-pill ${req.status}" id="scr-pill-${req.id}">${req.status.toUpperCase()}</div>
+      </div>
+      <div class="scr-req-rows">
+        <div class="scr-req-row"><span class="rl">Dept</span><span class="rv">${req.dept}</span></div>
+        <div class="scr-req-row"><span class="rl">Date(s)</span><span class="rv">${dateRange}</span></div>
+        <div class="scr-req-row"><span class="rl">Shift</span><span class="rv"><span class="scr-sbdg ${shiftCls[req.requested_shift]||""}">${shiftLbl[req.requested_shift]||req.requested_shift}</span></span></div>
+        ${req.reason?`<div class="scr-req-row"><span class="rl">Reason</span><span class="rv">${req.reason}</span></div>`:""}
+        <div class="scr-req-row"><span class="rl">Submitted</span><span class="rv">${new Date(req.submitted_at).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}</span></div>
+      </div>
+      ${req.status!=="pending"
+        ?`<div class="scr-req-note ${req.status==="rejected"?"rejt":""}">${req.status==="approved"?"✅ Schedule updated to "+(shiftLbl[req.requested_shift]||req.requested_shift):"❌ Rejected — original schedule kept"}</div>`
+        :`<div class="scr-req-acts" id="scr-acts-${req.id}">
+            <button class="scr-req-btn appr" onclick="scrAdminAction('${req.id}','approved','${req.employee_id}','${req.start_date}','${req.end_date}','${req.requested_shift}')">✅ Approve</button>
+            <button class="scr-req-btn rejt" onclick="scrAdminAction('${req.id}','rejected','${req.employee_id}','${req.start_date}','${req.end_date}','${req.requested_shift}')">❌ Reject</button>
+          </div>`
+      }`;
+    el.appendChild(card);
+  });
+  const noRes=document.createElement("div"); noRes.id="scr-no-res";
+  noRes.style.cssText="display:none;text-align:center;padding:28px;color:var(--mt);font-size:13px";
+  noRes.textContent="No requests match that name."; el.appendChild(noRes);
+}
+
+function scrFilterByName(q){
+  const term=q.toLowerCase().trim();
+  let visible=0;
+  document.querySelectorAll(".scr-req-card").forEach(c=>{
+    const match=!term||(c.dataset.empname||"").includes(term);
+    c.style.display=match?"":"none";
+    if(match)visible++;
+  });
+  const nr=$("scr-no-res"); if(nr)nr.style.display=visible?"none":"block";
+}
+
+async function scrAdminAction(reqId, action, empId, startDate, endDate, shiftCode){
+  const actDiv=$("scr-acts-"+reqId);
+  if(actDiv) actDiv.querySelectorAll(".scr-req-btn").forEach(b=>b.disabled=true);
+
+  const{error:e1}=await sb.from("shift_change_requests").update({status:action,reviewed_at:new Date().toISOString()}).eq("id",reqId);
+  if(e1){ toast("Update failed: "+e1.message,"er"); if(actDiv) actDiv.querySelectorAll(".scr-req-btn").forEach(b=>b.disabled=false); return; }
+
+  if(action==="approved"){
+    const rows=[]; const cur=new Date(startDate+"T00:00"); const end=new Date(endDate+"T00:00");
+    while(cur<=end){
+      const localDate=cur.getFullYear()+"-"+String(cur.getMonth()+1).padStart(2,"0")+"-"+String(cur.getDate()).padStart(2,"0");
+      rows.push({employee_id:empId, shift_date:localDate, shift_code:shiftCode, remarks:"Shift change request approved"});
+      cur.setDate(cur.getDate()+1);
+    }
+    const BATCH=50;
+    for(let i=0;i<rows.length;i+=BATCH){
+      const{error:e2}=await sb.from("shift_entries").upsert(rows.slice(i,i+BATCH),{onConflict:"employee_id,shift_date"});
+      if(e2){ toast("Shift update failed: "+e2.message,"er"); return; }
+    }
+    // Update in-memory SHIFTS so planner reflects immediately
+    rows.forEach(r=>{ if(!SHIFTS[r.shift_date])SHIFTS[r.shift_date]={}; SHIFTS[r.shift_date][r.employee_id]={shift:r.shift_code,remarks:r.remarks}; });
+    toast("✅ Approved — schedule updated");
+  } else {
+    toast("❌ Rejected — schedule unchanged");
+  }
+
+  // Update card UI in-place
+  const pill=$("scr-pill-"+reqId);
+  if(pill){ pill.className="scr-req-pill "+action; pill.textContent=action.toUpperCase(); }
+  const shiftLbl={"1ST":"🌅 1st Shift","2ND":"🌙 2nd Shift","OFF":"🏖️ Off"};
+  const note=document.createElement("div");
+  note.className="scr-req-note"+(action==="rejected"?" rejt":"");
+  note.textContent=action==="approved"?`✅ Schedule updated to ${shiftLbl[shiftCode]||shiftCode}`:"❌ Rejected — original schedule kept";
+  if(actDiv) actDiv.replaceWith(note);
+
+  const remaining=document.querySelectorAll(".scr-req-pill.pending").length;
+  scrUpdateBell(remaining);
+}
+
+async function scrLoadPendingCount(){
+  const{count,error}=await sb.from("shift_change_requests").select("*",{count:"exact",head:true}).eq("status","pending");
+  if(!error) scrUpdateBell(count||0);
+}
+
+function scrUpdateBell(count){
+  const badge=$("adm-scr-badge");
+  if(badge){ badge.textContent=count; badge.classList.toggle("hidden",count===0); }
+  const navBadge=$("adm-scr-badge-nav");
+  if(navBadge){ navBadge.textContent=count; navBadge.style.display=count>0?"flex":"none"; }
+}
+
+// ══ Chatbot UI helpers ══
+function scrBot(html){
+  const wrap=document.createElement("div"); wrap.className="scr-m bot";
+  const bub=document.createElement("div"); bub.className="scr-bub";
+  bub.innerHTML=html.replace(/\n/g,"<br>"); wrap.appendChild(bub);
+  $("scr-msgs").appendChild(wrap); scrScroll();
+}
+function scrUserMsg(text){
+  const wrap=document.createElement("div"); wrap.className="scr-m usr";
+  const bub=document.createElement("div"); bub.className="scr-bub";
+  bub.textContent=text; wrap.appendChild(bub);
+  $("scr-msgs").appendChild(wrap); scrScroll();
+}
+function scrTypingThen(cb,ms=600){
+  const wrap=document.createElement("div"); wrap.className="scr-m bot"; wrap.id="scr-typing";
+  const t=document.createElement("div"); t.className="scr-typing-wrap";
+  t.innerHTML='<div class="scr-dot"></div><div class="scr-dot"></div><div class="scr-dot"></div>';
+  wrap.appendChild(t); $("scr-msgs").appendChild(wrap); scrScroll();
+  setTimeout(()=>{ document.getElementById("scr-typing")?.remove(); cb(); },ms);
+}
+function scrOpts(options,callback){
+  const wrap=document.createElement("div"); wrap.className="scr-m bot";
+  const opts=document.createElement("div"); opts.className="scr-opts";
+  options.forEach(opt=>{
+    const btn=document.createElement("button"); btn.className="scr-opt"; btn.textContent=opt;
+    btn.onclick=()=>{ scrUserMsg(opt); opts.querySelectorAll(".scr-opt").forEach(b=>b.disabled=true); callback(opt); };
+    opts.appendChild(btn);
+  });
+  wrap.appendChild(opts); $("scr-msgs").appendChild(wrap); scrScroll();
+}
+function scrDatePick(defaultDate,minDate,maxDate,onConfirm){
+  const wrap=document.createElement("div"); wrap.className="scr-m bot";
+  const dw=document.createElement("div"); dw.className="scr-dw";
+  const inp=document.createElement("input"); inp.type="date"; inp.className="scr-di";
+  inp.value=defaultDate; inp.min=minDate; inp.max=maxDate;
+  const btn=document.createElement("button"); btn.className="scr-opt"; btn.style.width="100%"; btn.textContent="✅ Confirm Date";
+  btn.onclick=()=>{
+    const val=inp.value;
+    if(!val){ scrBot("⚠️ Please pick a date."); return; }
+    if(val<minDate){ scrBot("⚠️ Cannot request today's shift — pick from tomorrow."); return; }
+    if(val>maxDate){ scrBot("⚠️ Maximum 21 days ahead only."); return; }
+    inp.disabled=true; btn.disabled=true; onConfirm(val);
+  };
+  dw.appendChild(inp); dw.appendChild(btn); wrap.appendChild(dw);
+  $("scr-msgs").appendChild(wrap); scrScroll();
+}
+function scrShowInp(placeholder){
+  const area=$("scr-inp-area"), inp=$("scr-inp");
+  area.style.display="flex"; inp.placeholder=placeholder; inp.value="";
+  inp.disabled=false; $("scr-send-btn").disabled=false;
+  setTimeout(()=>inp.focus(),100);
+}
+function scrHideInp(){ const a=$("scr-inp-area"); if(a) a.style.display="none"; }
+function scrScroll(){ const el=$("scr-msgs"); if(el) setTimeout(()=>el.scrollTop=el.scrollHeight,60); }
+function scrFmtD(iso){ if(!iso) return "—"; return new Date(iso+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}); }
+function scrSteps(activeIdx,allDone=false){
+  for(let i=0;i<5;i++){
+    const dot=$("ssd"+i), lbl=$("ssl"+i); if(!dot) continue;
+    const done=allDone||i<activeIdx, active=!allDone&&i===activeIdx;
+    dot.style.background=done?"#25D366":active?"white":"rgba(255,255,255,.2)";
+    dot.style.transform=active?"scale(1.3)":"scale(1)";
+    if(lbl) lbl.className="scr-slbl"+(done?" done":active?" active":"");
+  }
+}
+// ══════════════════════════════════════════════
+// END SHIFT CHANGE REQUEST
+// ══════════════════════════════════════════════
 
 init();
 </script>
