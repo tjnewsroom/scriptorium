@@ -816,12 +816,20 @@ allShifts.forEach(s=>{
   EMPS.forEach(e => { uuidToCode[e._uuid] = e.id; });
   console.log("UUID map built, entries:", Object.keys(uuidToCode).length);
 
-  // ── NLE daily entries ──
+  // ── NLE daily entries (paginated up to 15000) ──
   setLd("Loading daily entries...");
-const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").order("created_at",{ascending:false}).limit(50000);  
-  if(nErr) console.error("nle_daily_entries error:",nErr.message);
+  let allNLE=[]; let nleFrom=0;
+  while(true){
+    const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").order("created_at").range(nleFrom,nleFrom+999);
+    if(nErr){console.error("nle_daily_entries error:",nErr.message);break;}
+    if(!nd||!nd.length)break;
+    allNLE=allNLE.concat(nd);
+    if(nd.length<1000||allNLE.length>=15000)break;
+    nleFrom+=1000;
+  }
+  console.log("Total NLE entries loaded:",allNLE.length);
   DAILY={};
-  (nd||[]).forEach(r=>{
+  allNLE.forEach(r=>{
     const code = uuidToCode[r.emp_id] || r.emp_id; // fallback
     if(!DAILY[code])DAILY[code]={};
     if(!DAILY[code][r.date])DAILY[code][r.date]=[];
@@ -833,12 +841,24 @@ const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").order("
     });
   });
 
-  // ── producer daily ──
+  // ── producer daily (paginated up to 15000) ──
   setLd("Loading producer entries...");
-  const{data:pd,error:pErr}=await sb.from("producer_daily").select("*");
-  if(pErr) console.error("producer_daily error:",pErr.message);
+  let allProd=[]; let prodFrom=0;
+  while(true){
+    const{data:pd2,error:pErr2}=await sb.from("producer_daily").select("*").range(prodFrom,prodFrom+999);
+    if(pErr2){console.error("producer_daily error:",pErr2.message);break;}
+    if(!pd2||!pd2.length)break;
+    allProd=allProd.concat(pd2);
+    if(pd2.length<1000||allProd.length>=15000)break;
+    prodFrom+=1000;
+  }
+  console.log("Total producer entries loaded:",allProd.length);
+  // dummy ref to satisfy original code pattern — real load below
+  const pd=allProd; const{data:_pd,error:pErr}={data:null,error:null};
+  if(false) await sb.from("producer_daily").select("*");
+  if(pErr) console.error("producer_daily error:",pErr?.message);
   PROD_DAILY={};
-  (pd||[]).forEach(r=>{
+  pd.forEach(r=>{
     const code = uuidToCode[r.emp_id] || r.emp_id;
     if(!PROD_DAILY[code])PROD_DAILY[code]={};
     PROD_DAILY[code][r.date]=r;
@@ -1337,14 +1357,18 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
 
   if(dept==="NLE Editor"){
     html+=`<div class="card">
-      <div style="font-size:12px;font-weight:600;color:var(--mt);margin-bottom:14px;letter-spacing:.06em">NEWS ITEMS EDITED</div>`;
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:12px;font-weight:600;color:var(--mt);letter-spacing:.06em">NEWS ITEMS EDITED</div>
+        ${items.length>0?`<input class="inp inp-sm" id="daily-search" placeholder="🔍 Search items..." oninput="filterDailyItems(this.value)" style="max-width:220px"/>`:``}
+      </div>`;
     if(!items.length){
       html+=`<div style="text-align:center;padding:32px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">📰</div><div>No items yet. Add one below.</div></div>`;
     } else {
       items.forEach((it,i)=>{
         const nt=NEWS_TYPES.find(n=>n.key===it.type)||NEWS_TYPES[0];
         const mins=tdiff(it.startTime,it.endTime)??it.manualMins??0;
-        html+=`<div class="ni-item" id="nli-${i}">
+        const _srch=[nt.label,it.desc||"",it.type].join(" ").toLowerCase().replace(/"/g,"'");
+        html+=`<div class="ni-item" id="nli-${i}" data-search="${_srch}">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
             <div style="width:24px;height:24px;border-radius:6px;background:${nt.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
             <select class="inp inp-sm" style="flex:1;max-width:180px" onchange="nleUpdateField('${empId}','${dateStr}',${i},'type',this.value)">
@@ -1439,7 +1463,12 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
   $(container).innerHTML=html;
 }
 
-// NLE ACTIONS
+function filterDailyItems(q){
+  const term=q.toLowerCase().trim();
+  document.querySelectorAll(".ni-item[data-search]").forEach(el=>{
+    el.style.display=!term||(el.dataset.search||"").includes(term)?"":"none";
+  });
+}
 // AFTER
 async function nleAddItem(empId, date, container, dept){
   if(!DAILY[empId])DAILY[empId]={};
@@ -1797,11 +1826,19 @@ function renderOverview(dateStr){
 // ── TODAY'S WORK ──
 function renderToday(dateStr){
   const allE=EMPS.filter(e=>e.is_active);
-  let html=`<div class="sec-hdr"><div class="sec-title">Today's Work</div><div class="sec-sub">${fmtDate(dateStr)}</div></div>`;
-  const depts=[...new Set(allE.map(e=>e.dept))];
-  depts.forEach(dept=>{
+  const DEPT_ORDER=["NLE Editor","News Producer","Voice Over"];
+  let html=`<div class="sec-hdr">
+    <div><div class="sec-title">Today's Work</div><div class="sec-sub">${fmtDate(dateStr)}</div></div>
+  </div>
+  <div style="margin-bottom:16px">
+    <input class="inp" id="today-search" placeholder="🔍 Search by name, type, or description..." oninput="filterTodayWork(this.value)" style="max-width:420px"/>
+  </div>
+  <div id="today-work-body">`;
+  DEPT_ORDER.forEach(dept=>{
     const dc=deptColor(dept);
     const emps=allE.filter(e=>e.dept===dept);
+    if(!emps.length)return;
+    html+=`<div class="today-dept-section" data-dept="${dept}">`;
     html+=`<div style="font-size:11px;font-weight:700;color:${dc};letter-spacing:.1em;margin:18px 0 10px;padding:5px 12px;background:${dc}12;border-radius:6px;border-left:3px solid ${dc}">${dept.toUpperCase()}</div>`;
     emps.forEach(e=>{
       const items=DAILY[e.id]?.[dateStr]||[];
@@ -1809,7 +1846,9 @@ function renderToday(dateStr){
       const wpts=items.reduce((s,it)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};return s+nt.weight;},0);
       const brks=BREAKS[e.id]?.[dateStr]||[];
       const brkMins=brks.reduce((s,b)=>s+(tdiff(b.start,b.end)||0),0);
-      html+=`<div class="card" style="margin-bottom:10px;border-left:3px solid ${items.length?dc:"var(--brd)"}">
+      // build searchable text for this employee card
+      const searchText=[e.name,e.id,dept,...items.map(it=>{const nt=NEWS_TYPES.find(n=>n.key===it.type);return[nt?.label||it.type,it.desc||""].join(" ");})].join(" ").toLowerCase();
+      html+=`<div class="card today-emp-card" style="margin-bottom:10px;border-left:3px solid ${items.length?dc:"var(--brd)"}" data-search="${searchText}">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:${items.length?12:0}px">
           <div style="width:36px;height:36px;border-radius:9px;background:${dc}18;color:${dc};display:flex;align-items:center;justify-content:center;font-weight:700">${e.name[0]}</div>
           <div style="flex:1"><div style="font-size:14px;font-weight:700">${e.name}</div><div style="font-size:10px;color:var(--mt);font-family:'JetBrains Mono'">${e.id}</div></div>
@@ -1819,10 +1858,26 @@ function renderToday(dateStr){
           </div>
         </div>
         ${items.length&&dept==="NLE Editor"?`<div style="overflow-x:auto"><table class="tbl" style="font-size:12px"><thead><tr><th>#</th><th>Type</th><th>Time</th><th>Pts</th><th>Description</th></tr></thead><tbody>${items.map((it,i)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||NEWS_TYPES[0];const m=tdiff(it.startTime,it.endTime)??it.manualMins??null;return`<tr><td style="color:var(--mt)">${i+1}</td><td><span class="bdg" style="background:${nt.color}18;color:${nt.color}">${nt.icon} ${nt.label}</span></td><td style="font-family:'JetBrains Mono';color:var(--green)">${m!==null?fmtMin(m):"—"}</td><td style="font-family:'JetBrains Mono';font-weight:700;color:${nt.color}">×${nt.weight}</td><td style="color:var(--mt)">${it.desc||"—"}</td></tr>`;}).join("")}</tbody></table></div>`:""}
+        ${items.length&&(dept==="News Producer"||dept==="Voice Over")?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">${(dept==="News Producer"?PROD_FIELDS:VO_FIELDS).map(f=>{const v=parseInt((PROD_DAILY[e.id]?.[dateStr]||{})[f.key])||0;return v>0?`<span class="bdg" style="background:${f.color}18;color:${f.color}">${f.icon} ${f.label}: <b>${v}</b></span>`:""}).join("")}</div>`:""}
       </div>`;
     });
+    html+=`</div>`;
   });
+  html+=`</div>`;
   $("at-today").innerHTML=html;
+}
+
+function filterTodayWork(q){
+  const term=q.toLowerCase().trim();
+  document.querySelectorAll(".today-emp-card").forEach(card=>{
+    const match=!term||(card.dataset.search||"").includes(term);
+    card.style.display=match?"":"none";
+  });
+  // hide dept section headers if all cards hidden
+  document.querySelectorAll(".today-dept-section").forEach(sec=>{
+    const visible=[...sec.querySelectorAll(".today-emp-card")].some(c=>c.style.display!=="none");
+    sec.style.display=visible?"":"none";
+  });
 }
 
 // ── ATTENDANCE ──
