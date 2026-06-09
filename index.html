@@ -1367,7 +1367,8 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
       items.forEach((it,i)=>{
         const nt=NEWS_TYPES.find(n=>n.key===it.type)||NEWS_TYPES[0];
         const mins=tdiff(it.startTime,it.endTime)??it.manualMins??0;
-        const _srch=[nt.label,it.desc||"",it.type].join(" ").toLowerCase().replace(/"/g,"'");
+        const _srch=[nt.label,it.desc||"",it.type,nt.icon||""].join(" ").toLowerCase().replace(/['"]/g,"");
+        // Gap: time between previous task's end and this task's start - shown in Today's Work view only
         html+=`<div class="ni-item" id="nli-${i}" data-search="${_srch}">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
             <div style="width:24px;height:24px;border-radius:6px;background:${nt.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
@@ -1381,7 +1382,7 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:1px solid var(--brd);border-radius:7px;padding:4px 8px">
               <span style="font-size:10px;color:var(--mt);font-weight:600">IN</span>
-              <input type="time" class="inp inp-sm" value="${it.startTime||''}" style="border:none;background:transparent;padding:2px 4px;font-size:12px;width:88px"
+              <input id="nli-st-${i}" type="time" class="inp inp-sm" value="${it.startTime||''}" style="border:none;background:transparent;padding:2px 4px;font-size:12px;width:88px"
                 onchange="nleUpdateField('${empId}','${dateStr}',${i},'startTime',this.value)"/>
               <button onclick="nleSetNow('${empId}','${dateStr}',${i},'startTime','${container}','${dept}')"
                 style="background:var(--bl);border:none;border-radius:5px;padding:2px 6px;font-size:10px;color:var(--blue);cursor:pointer;font-weight:700">Now</button>
@@ -1389,7 +1390,7 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
             <span style="color:var(--mt)">→</span>
             <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:1px solid var(--brd);border-radius:7px;padding:4px 8px">
               <span style="font-size:10px;color:var(--mt);font-weight:600">OUT</span>
-              <input type="time" class="inp inp-sm" value="${it.endTime||''}" style="border:none;background:transparent;padding:2px 4px;font-size:12px;width:88px"
+              <input id="nli-et-${i}" type="time" class="inp inp-sm" value="${it.endTime||''}" style="border:none;background:transparent;padding:2px 4px;font-size:12px;width:88px"
                 onchange="nleUpdateField('${empId}','${dateStr}',${i},'endTime',this.value)"/>
               <button onclick="nleSetNow('${empId}','${dateStr}',${i},'endTime','${container}','${dept}')"
                 style="background:var(--gl);border:none;border-radius:5px;padding:2px 6px;font-size:10px;color:var(--green);cursor:pointer;font-weight:700">Now</button>
@@ -1465,18 +1466,45 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
 
 function filterDailyItems(q){
   const term=q.toLowerCase().trim();
+  let visible=0;
   document.querySelectorAll(".ni-item[data-search]").forEach(el=>{
-    el.style.display=!term||(el.dataset.search||"").includes(term)?"":"none";
+    const match=!term||(el.dataset.search||"").includes(term);
+    el.style.display=match?"":"none";
+    if(match)visible++;
   });
+  // Show no-results hint if needed
+  let noRes=document.getElementById("daily-no-res");
+  if(!noRes){
+    noRes=document.createElement("div");
+    noRes.id="daily-no-res";
+    noRes.style.cssText="padding:16px;text-align:center;color:var(--mt);font-size:13px;display:none";
+    noRes.textContent="No items match your search.";
+    const firstItem=document.querySelector(".ni-item[data-search]");
+    if(firstItem&&firstItem.parentNode)firstItem.parentNode.appendChild(noRes);
+  }
+  if(noRes)noRes.style.display=(term&&visible===0)?"block":"none";
 }
 // AFTER
 async function nleAddItem(empId, date, container, dept){
   if(!DAILY[empId])DAILY[empId]={};
   if(!DAILY[empId][date])DAILY[empId][date]=[];
   const existing=DAILY[empId][date];
-  // save the last item only (the one just filled before clicking Add New)
+  // Validate last item has both In and Out times before allowing a new task
   if(existing.length){
     const last=existing[existing.length-1];
+    if(!last.startTime||!last.endTime){
+      toast("⚠️ IN and OUT time are mandatory for Task "+existing.length+" before adding a new task.","er");
+      // Highlight missing fields using rendered input IDs
+      if(!last.startTime){
+        const el=document.getElementById("nli-st-"+(existing.length-1));
+        if(el){el.style.border="2px solid var(--red)";el.focus();}
+      }
+      if(!last.endTime){
+        const el=document.getElementById("nli-et-"+(existing.length-1));
+        if(el)el.style.border="2px solid var(--red)";
+      }
+      return;
+    }
     await sbSaveNLEItem(empId,date,last);
     toast("✓ Item "+existing.length+" saved");
   }
@@ -1484,9 +1512,31 @@ async function nleAddItem(empId, date, container, dept){
   renderDailyEntry(empId,dept,date,container,false);
 }
 
+function nleCurrentTimeHHMM(){
+  return new Date().toTimeString().slice(0,5);
+}
+
 function nleUpdateField(empId, date, idx, field, val){
   const it=DAILY[empId]?.[date]?.[idx];
-  if(it!==undefined)it[field]=val;
+  if(it===undefined)return;
+  // Validate time fields don't exceed current time (only for today)
+  if((field==="startTime"||field==="endTime")&&val){
+    const today=todayStr();
+    if(date===today&&val>nleCurrentTimeHHMM()){
+      toast("⚠️ Time cannot be greater than current time.","er");
+      // Reset the input to previous value
+      renderDailyEntry(empId,ME.dept,date,
+        ME.role==="admin"?"at-daily":"et-daily",ME.role==="admin");
+      return;
+    }
+    if(field==="endTime"&&it.startTime&&val<it.startTime){
+      toast("⚠️ OUT time cannot be before IN time.","er");
+      renderDailyEntry(empId,ME.dept,date,
+        ME.role==="admin"?"at-daily":"et-daily",ME.role==="admin");
+      return;
+    }
+  }
+  it[field]=val;
 }
 
 function nleSetNow(empId, date, idx, field, container, dept){
@@ -1857,7 +1907,7 @@ function renderToday(dateStr){
             `<div style="font-size:12px;color:var(--mt);font-style:italic">No entry</div>`}
           </div>
         </div>
-        ${items.length&&dept==="NLE Editor"?`<div style="overflow-x:auto"><table class="tbl" style="font-size:12px"><thead><tr><th>#</th><th>Type</th><th>Time</th><th>Pts</th><th>Description</th></tr></thead><tbody>${items.map((it,i)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||NEWS_TYPES[0];const m=tdiff(it.startTime,it.endTime)??it.manualMins??null;return`<tr><td style="color:var(--mt)">${i+1}</td><td><span class="bdg" style="background:${nt.color}18;color:${nt.color}">${nt.icon} ${nt.label}</span></td><td style="font-family:'JetBrains Mono';color:var(--green)">${m!==null?fmtMin(m):"—"}</td><td style="font-family:'JetBrains Mono';font-weight:700;color:${nt.color}">×${nt.weight}</td><td style="color:var(--mt)">${it.desc||"—"}</td></tr>`;}).join("")}</tbody></table></div>`:""}
+        ${items.length&&dept==="NLE Editor"?`<div style="overflow-x:auto"><table class="tbl" style="font-size:12px"><thead><tr><th>#</th><th>Type</th><th>IN→OUT</th><th>Time</th><th>Pts</th><th>Description</th></tr></thead><tbody>${items.map((it,i)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||NEWS_TYPES[0];const m=tdiff(it.startTime,it.endTime)??it.manualMins??null;const prev=items[i-1];const gapMins=i>0?tdiff(prev.endTime,it.startTime):null;const gapRow=gapMins>0?`<tr><td colspan="6" style="padding:3px 10px;background:var(--al);border-bottom:1px solid var(--brd)"><span style="font-size:10px;font-weight:700;color:var(--amber);font-family:'JetBrains Mono'">⏸ Gap: ${fmtMin(gapMins)}</span><span style="font-size:10px;color:var(--mt);margin-left:6px">(${prev.endTime} → ${it.startTime})</span></td></tr>`:"";return`${gapRow}<tr><td style="color:var(--mt)">${i+1}</td><td><span class="bdg" style="background:${nt.color}18;color:${nt.color}">${nt.icon} ${nt.label}</span></td><td style="font-family:'JetBrains Mono';font-size:11px;color:var(--mt)">${it.startTime||"—"} → ${it.endTime||"—"}</td><td style="font-family:'JetBrains Mono';color:var(--green)">${m!==null?fmtMin(m):"—"}</td><td style="font-family:'JetBrains Mono';font-weight:700;color:${nt.color}">×${nt.weight}</td><td style="color:var(--mt)">${it.desc||"—"}</td></tr>`;}).join("")}</tbody></table></div>`:""}
         ${items.length&&(dept==="News Producer"||dept==="Voice Over")?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">${(dept==="News Producer"?PROD_FIELDS:VO_FIELDS).map(f=>{const v=parseInt((PROD_DAILY[e.id]?.[dateStr]||{})[f.key])||0;return v>0?`<span class="bdg" style="background:${f.color}18;color:${f.color}">${f.icon} ${f.label}: <b>${v}</b></span>`:""}).join("")}</div>`:""}
       </div>`;
     });
