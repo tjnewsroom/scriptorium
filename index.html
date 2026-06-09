@@ -395,8 +395,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
       <button class="ni" id="an-shiftreq" onclick="aNav('shiftreq')"><span class="ni-ico">🔄</span>Shift Requests<span class="scr-bell-badge hidden" id="adm-scr-badge-nav" style="position:relative;top:auto;right:auto;margin-left:auto;min-width:16px;height:16px;font-size:.52rem;display:none;align-items:center;justify-content:center;background:#ef4444;color:white;border-radius:50%;padding:0 2px;font-weight:700" id="adm-scr-badge-nav">0</span></button>
       <button class="ni" id="an-staff" onclick="aNav('staff')"><span class="ni-ico">👥</span>All Staff</button>
       <button class="ni" id="an-quality" onclick="aNav('quality')"><span class="ni-ico">⚠️</span>Quality & Errors</button>
-      <button class="ni" id="an-rel" onclick="aNav('rel')" style="display:none"><span class="ni-ico">⭐</span>Reliability</button>
-      <button class="ni" id="an-prod" onclick="aNav('prod')"><span class="ni-ico">📋</span>Producers</button>
+    <!-- AFTER -->
+<button class="mob-btn" id="am-rel" onclick="aNav('rel')" style="display:none"><span class="mi">⭐</span>Reliability</button>      <button class="ni" id="an-prod" onclick="aNav('prod')"><span class="ni-ico">📋</span>Producers</button>
       <div class="nsec">Reports</div>
       <button class="ni" id="an-report" onclick="aNav('report')"><span class="ni-ico">📈</span>Full Report</button>
       <div class="nsec" id="an-switch-sec" style="display:none">Switch Role</div>
@@ -431,7 +431,8 @@ input,select,button,textarea{font-family:'Inter',sans-serif;outline:none}
     <button class="mob-btn" id="am-shiftreq" onclick="aNav('shiftreq')"><span class="mi">🔄</span>Shifts Req</button>
     <button class="mob-btn" id="am-staff" onclick="aNav('staff')"><span class="mi">👥</span>Staff</button>
     <button class="mob-btn" id="am-quality" onclick="aNav('quality')"><span class="mi">⚠️</span>Quality</button>
-  <button class="mob-btn" id="am-rel" onclick="aNav('rel')" style="display:none"><span class="mi">⭐</span>Reliability</button>
+<!-- AFTER -->
+<button class="mob-btn" id="am-rel" onclick="aNav('rel')" style="display:none"><span class="mi">⭐</span>Reliability</button>
     <button class="mob-btn" id="am-prod" onclick="aNav('prod')"><span class="mi">📋</span>Producers</button>
     <button class="mob-btn" id="am-report" onclick="aNav('report')"><span class="mi">📈</span>Report</button>
     <button class="mob-btn" id="am-switch" style="display:none;color:var(--purple)" onclick="switchToEmpView()"><span class="mi">👤</span>Emp View</button>
@@ -766,37 +767,6 @@ function calcScore(empId, dept, month){
 // ══════════════════════════════════════════════
 // SUPABASE LOAD
 // ══════════════════════════════════════════════
-// Fetch NLE entries for a specific date into DAILY (cached — skip if already loaded)
-async function fetchNLEDate(dateStr, uuidToCode){
-  // Build uuidToCode if not passed (on-demand calls after init)
-  if(!uuidToCode){
-    uuidToCode={};
-    EMPS.forEach(e=>{if(e._uuid)uuidToCode[e._uuid]=e.id;});
-  }
-  // Skip if already cached (check first active employee)
-  const firstEmp=EMPS.find(e=>e.is_active);
-  if(firstEmp&&DAILY[firstEmp.id]&&DAILY[firstEmp.id][dateStr]!==undefined) return;
-
-  const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").eq("date",dateStr).order("created_at",{ascending:true});
-  if(nErr){console.error("nle_daily_entries fetch error:",nErr.message);return;}
-  // Mark all active employees as fetched for this date (even if no data)
-  EMPS.filter(e=>e.is_active).forEach(e=>{
-    if(!DAILY[e.id])DAILY[e.id]={};
-    if(DAILY[e.id][dateStr]===undefined)DAILY[e.id][dateStr]=[];
-  });
-  (nd||[]).forEach(r=>{
-    const code=uuidToCode[r.emp_id]||r.emp_id;
-    if(!DAILY[code])DAILY[code]={};
-    if(!Array.isArray(DAILY[code][dateStr]))DAILY[code][dateStr]=[];
-    DAILY[code][dateStr].push({
-      _id:r.id,type:r.news_type,desc:r.description||"",
-      startTime:r.start_time?.slice(0,5)||"",
-      endTime:r.end_time?.slice(0,5)||"",
-      manualMins:r.manual_mins||0
-    });
-  });
-}
-
 async function loadAll(role="admin", empId=null){
   // ── employees ──
   setLd("Loading employees...");
@@ -846,10 +816,22 @@ allShifts.forEach(s=>{
   EMPS.forEach(e => { uuidToCode[e._uuid] = e.id; });
   console.log("UUID map built, entries:", Object.keys(uuidToCode).length);
 
-  // ── NLE daily entries — load today only; other dates fetched on demand ──
+  // ── NLE daily entries ──
   setLd("Loading daily entries...");
+  const{data:nd,error:nErr}=await sb.from("nle_daily_entries").select("*").order("created_at");
+  if(nErr) console.error("nle_daily_entries error:",nErr.message);
   DAILY={};
-  await fetchNLEDate(todayStr(), uuidToCode);
+  (nd||[]).forEach(r=>{
+    const code = uuidToCode[r.emp_id] || r.emp_id; // fallback
+    if(!DAILY[code])DAILY[code]={};
+    if(!DAILY[code][r.date])DAILY[code][r.date]=[];
+    DAILY[code][r.date].push({
+      _id:r.id, type:r.news_type, desc:r.description||"",
+      startTime:r.start_time?.slice(0,5)||"",
+      endTime:r.end_time?.slice(0,5)||"",
+      manualMins:r.manual_mins||0
+    });
+  });
 
   // ── producer daily ──
   setLd("Loading producer entries...");
@@ -1256,7 +1238,7 @@ function eNav(tab){
 
 function eRender(){
   const d=$("e-date").value||todayStr();
-  if(eTab==="daily"){fetchNLEDate(d).then(()=>renderDailyEntry(ME.id,ME.dept,d,"et-daily",false));return;}
+  if(eTab==="daily")renderDailyEntry(ME.id,ME.dept,d,"et-daily",false);
   else if(eTab==="breaks")renderBreaksTab(ME.id,d,"et-breaks");
   else if(eTab==="score")renderScore();
   else if(eTab==="history")renderHistory();
@@ -1458,10 +1440,18 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
 }
 
 // NLE ACTIONS
-function nleAddItem(empId, date, container, dept){
+// AFTER
+async function nleAddItem(empId, date, container, dept){
   if(!DAILY[empId])DAILY[empId]={};
   if(!DAILY[empId][date])DAILY[empId][date]=[];
-  DAILY[empId][date].push({type:"vo_sot",desc:"",startTime:"",endTime:"",manualMins:0});
+  const existing=DAILY[empId][date];
+  // save the last item only (the one just filled before clicking Add New)
+  if(existing.length){
+    const last=existing[existing.length-1];
+    await sbSaveNLEItem(empId,date,last);
+    toast("✓ Item "+existing.length+" saved");
+  }
+  existing.push({type:"vo_sot",desc:"",startTime:"",endTime:"",manualMins:0});
   renderDailyEntry(empId,dept,date,container,false);
 }
 
@@ -1602,7 +1592,7 @@ function renderScore(){
 // ══════════════════════════════════════════════
 // HISTORY TAB
 // ══════════════════════════════════════════════
-function renderHistory(){
+async function renderHistory(){
   const days=Object.keys(DAILY[ME.id]||{}).sort().reverse().slice(0,30);
   let html=`<div class="sec-hdr"><div class="sec-title">History</div><div class="sec-sub">Last 30 days</div></div>`;
   if(!days.length){html+=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">📅</div>No history yet</div>`;}
@@ -1621,6 +1611,38 @@ function renderHistory(){
       </div>
     </div>`;
   });
+
+  // Shift change requests — show approved/rejected where end_date >= today (not yet passed)
+  const today=todayStr();
+  html+=`<div class="sec-hdr" style="margin-top:20px"><div class="sec-title" style="font-size:14px">🔄 My Shift Change Requests</div><div class="sec-sub">Upcoming & recent</div></div>`;
+  const {data:reqs,error}=await sb.from("shift_change_requests")
+    .select("*")
+    .eq("employee_id",ME.id)
+    .in("status",["approved","rejected"])
+    .gte("end_date",today)
+    .order("start_date",{ascending:true});
+  if(error||!reqs||!reqs.length){
+    html+=`<div class="card" style="text-align:center;padding:20px;color:var(--mt);font-size:12px">No upcoming approved or rejected shift requests.</div>`;
+  } else {
+    const shiftLbl={"1ST":"🌅 1st Shift","2ND":"🌙 2nd Shift","OFF":"🏖️ Off"};
+    reqs.forEach(r=>{
+      const isApproved=r.status==="approved";
+      const bg=isApproved?"var(--gl)":"rgba(239,68,68,.06)";
+      const brd=isApproved?"var(--green)":"#fca5a5";
+      const statusColor=isApproved?"#059669":"#ef4444";
+      const dateRange=r.start_date===r.end_date?scrFmtD(r.start_date):scrFmtD(r.start_date)+" → "+scrFmtD(r.end_date);
+      html+=`<div class="card-sm" style="margin-bottom:8px;background:${bg};border:1.5px solid ${brd}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;margin-bottom:2px">${shiftLbl[r.requested_shift]||r.requested_shift}</div>
+            <div style="font-size:11px;color:var(--mt)">${dateRange}</div>
+            ${r.reason?`<div style="font-size:11px;color:var(--mt);font-style:italic;margin-top:2px">"${r.reason}"</div>`:""}
+          </div>
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;background:${statusColor};color:#fff;flex-shrink:0">${r.status.toUpperCase()}</span>
+        </div>
+      </div>`;
+    });
+  }
   $("et-history").innerHTML=html;
 }
 
@@ -1725,7 +1747,7 @@ function aNav(tab){
 
 function aRender(){
   const d=$("a-date").value||todayStr();
-  if(aTab==="mywork"){fetchNLEDate(d).then(()=>renderDailyEntry(ME.id,ME.dept,d,"at-mywork",true));return;}
+  if(aTab==="mywork")renderDailyEntry(ME.id,ME.dept,d,"at-mywork",true);
   else if(aTab==="mybreaks")renderBreaksTab(ME.id,d,"at-mybreaks");
   else if(aTab==="myscore")renderAdminScore();
   else if(aTab==="myhistory")renderAdminHistory();
@@ -1764,7 +1786,7 @@ function renderOverview(dateStr){
       <div style="width:8px;height:8px;border-radius:50%;background:${items.length?"var(--green)":"var(--dim)"}"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortN(e.name)}</div>
-        <div style="font-size:10px;color:var(--mt);font-family:'JetBrains Mono'">${items.length?items.length+" items · "+wpts+" pts":"No entry"}</div>
+        <div style="font-size:10px;color:var(--mt);font-family:'JetBrains Mono'">${items.length?items.length+" items · "+wpts+" pts":"Absent"}</div>
       </div>
     </div>`;
   });
@@ -1773,22 +1795,20 @@ function renderOverview(dateStr){
 }
 
 // ── TODAY'S WORK ──
-async function renderToday(dateStr){
+function renderToday(dateStr){
   const allE=EMPS.filter(e=>e.is_active);
-  $("at-today").innerHTML=`<div class="sec-hdr"><div class="sec-title">Today\'s Work</div><div class="sec-sub">${fmtDate(dateStr)}</div></div><div style="text-align:center;padding:40px;color:var(--mt)"><div class="ld-ring" style="margin:0 auto 12px"></div>Loading entries...</div>`;
-  await fetchNLEDate(dateStr);
-  // Fixed order: NLE Editor → News Producer → Voice Over
-  const DEPT_ORDER=["NLE Editor","News Producer","Voice Over"];
-  let html=`<div class="sec-hdr"><div class="sec-title">Today\'s Work</div><div class="sec-sub">${fmtDate(dateStr)}</div></div>`;
-  DEPT_ORDER.forEach(dept=>{
-    const emps=allE.filter(e=>e.dept===dept);
-    if(!emps.length)return;
+  let html=`<div class="sec-hdr"><div class="sec-title">Today's Work</div><div class="sec-sub">${fmtDate(dateStr)}</div></div>`;
+  const depts=[...new Set(allE.map(e=>e.dept))];
+  depts.forEach(dept=>{
     const dc=deptColor(dept);
+    const emps=allE.filter(e=>e.dept===dept);
     html+=`<div style="font-size:11px;font-weight:700;color:${dc};letter-spacing:.1em;margin:18px 0 10px;padding:5px 12px;background:${dc}12;border-radius:6px;border-left:3px solid ${dc}">${dept.toUpperCase()}</div>`;
     emps.forEach(e=>{
       const items=DAILY[e.id]?.[dateStr]||[];
       const mins=items.reduce((s,it)=>s+(tdiff(it.startTime,it.endTime)??it.manualMins??0),0);
       const wpts=items.reduce((s,it)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};return s+nt.weight;},0);
+      const brks=BREAKS[e.id]?.[dateStr]||[];
+      const brkMins=brks.reduce((s,b)=>s+(tdiff(b.start,b.end)||0),0);
       html+=`<div class="card" style="margin-bottom:10px;border-left:3px solid ${items.length?dc:"var(--brd)"}">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:${items.length?12:0}px">
           <div style="width:36px;height:36px;border-radius:9px;background:${dc}18;color:${dc};display:flex;align-items:center;justify-content:center;font-weight:700">${e.name[0]}</div>
@@ -1804,6 +1824,7 @@ async function renderToday(dateStr){
   });
   $("at-today").innerHTML=html;
 }
+
 // ── ATTENDANCE ──
 function renderAttendance(dateStr){
   const allE=EMPS.filter(e=>e.is_active);
@@ -2290,23 +2311,52 @@ function renderProducers(dateStr){
 }
 
 // ── FULL REPORT ──
+function rptLocalStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+
 function renderReport(){
   const now=new Date();
-  const defaultFrom=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-01`;
-  const defaultTo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const today=rptLocalStr(now);
+  const dow=now.getDay()||7; // 1=Mon..7=Sun
+  const monDate=new Date(now); monDate.setDate(now.getDate()-(dow-1));
+  const weekFrom=rptLocalStr(monDate);
+  const monthFrom=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
 
   $("at-report").innerHTML=`
     <div class="sec-hdr">
-      <div><div class="sec-title">Full MIS Report</div><div class="sec-sub">Select a date range to generate the report</div></div>
+      <div><div class="sec-title">Full MIS Report</div><div class="sec-sub" id="rpt-sub">Today's Report</div></div>
     </div>
     <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
-        <div><label class="lbl">From Date</label><input class="inp" type="date" id="rpt-from" value="${defaultFrom}" style="width:160px"/></div>
-        <div><label class="lbl">To Date</label><input class="inp" type="date" id="rpt-to" value="${defaultTo}" style="width:160px"/></div>
-        <button class="btn btn-p" onclick="renderReportRange()">📈 Generate Report</button>
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-p rpt-pill" id="rpt-today" onclick="rptPreset('today','${today}','${today}')">📅 Today</button>
+          <button class="btn btn-s rpt-pill" id="rpt-week"  onclick="rptPreset('week','${weekFrom}','${today}')">📆 This Week</button>
+          <button class="btn btn-s rpt-pill" id="rpt-month" onclick="rptPreset('month','${monthFrom}','${today}')">🗓 This Month</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;border-left:2px solid var(--brd);padding-left:10px">
+          <div><label class="lbl" style="font-size:10px">From</label><input class="inp" type="date" id="rpt-from" value="${today}" style="width:148px" onchange="rptClearPill()"/></div>
+          <div><label class="lbl" style="font-size:10px">To</label><input class="inp" type="date" id="rpt-to" value="${today}" style="width:148px" onchange="rptClearPill()"/></div>
+          <button class="btn btn-p" onclick="renderReportRange()">📈 Generate</button>
+        </div>
       </div>
     </div>
     <div id="rpt-range-out"></div>`;
+
+  renderReportRange(); // auto-show today
+}
+
+function rptPreset(key,from,to){
+  document.querySelectorAll(".rpt-pill").forEach(b=>{b.classList.remove("btn-p");b.classList.add("btn-s");});
+  const btn=$("rpt-"+key); if(btn){btn.classList.add("btn-p");btn.classList.remove("btn-s");}
+  const fi=$("rpt-from"),ti=$("rpt-to");
+  if(fi)fi.value=from; if(ti)ti.value=to;
+  const lbls={"today":"Today's Report","week":"This Week's Report","month":"This Month's Report"};
+  const sub=$("rpt-sub"); if(sub)sub.textContent=lbls[key]||"Report";
+  renderReportRange();
+}
+
+function rptClearPill(){
+  document.querySelectorAll(".rpt-pill").forEach(b=>{b.classList.remove("btn-p");b.classList.add("btn-s");});
+  const sub=$("rpt-sub"); if(sub)sub.textContent="Custom Range Report";
 }
 
 function renderReportRange(){
@@ -2676,14 +2726,16 @@ async function renderShiftRequests(){
   }
 
   el.innerHTML+=`<div class="card" style="background:var(--al);border-color:rgba(217,119,6,.3);margin-bottom:16px">
-    <div style="font-weight:700;color:var(--amber)">🔔 ${pendingCount} pending request${pendingCount>1?"s":""} awaiting your approval</div></div>`;
+    <div style="font-weight:700;color:var(--amber);margin-bottom:10px">🔔 ${pendingCount} pending request${pendingCount>1?"s":""} awaiting your approval</div>
+    <input class="inp" type="text" id="scr-name-filter" placeholder="🔍 Filter by employee name…" style="font-size:12px;width:100%" oninput="scrFilterByName(this.value)"/>
+  </div>`;
 
   const shiftLbl={"1ST":"🌅 1st Shift","2ND":"🌙 2nd Shift","OFF":"🏖️ Off"};
   const shiftCls={"1ST":"sc1","2ND":"sc2","OFF":"scoff"};
 
   pendingReqs.forEach(req=>{
     const dateRange=req.start_date===req.end_date?scrFmtD(req.start_date):`${scrFmtD(req.start_date)} → ${scrFmtD(req.end_date)}`;
-    const card=document.createElement("div"); card.className="scr-req-card"; card.id="scr-req-"+req.id;
+    const card=document.createElement("div"); card.className="scr-req-card"; card.id="scr-req-"+req.id; card.dataset.empname=(req.employee_name||"").toLowerCase();
     card.innerHTML=`
       <div class="scr-req-hdr">
         <div class="scr-req-name">${req.employee_name}</div>
@@ -2705,6 +2757,20 @@ async function renderShiftRequests(){
       }`;
     el.appendChild(card);
   });
+  const noRes=document.createElement("div"); noRes.id="scr-no-res";
+  noRes.style.cssText="display:none;text-align:center;padding:28px;color:var(--mt);font-size:13px";
+  noRes.textContent="No requests match that name."; el.appendChild(noRes);
+}
+
+function scrFilterByName(q){
+  const term=q.toLowerCase().trim();
+  let visible=0;
+  document.querySelectorAll(".scr-req-card").forEach(c=>{
+    const match=!term||(c.dataset.empname||"").includes(term);
+    c.style.display=match?"":"none";
+    if(match)visible++;
+  });
+  const nr=$("scr-no-res"); if(nr)nr.style.display=visible?"none":"block";
 }
 
 async function scrAdminAction(reqId, action, empId, startDate, endDate, shiftCode){
