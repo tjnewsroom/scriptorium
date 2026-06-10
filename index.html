@@ -1368,7 +1368,19 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
         const nt=NEWS_TYPES.find(n=>n.key===it.type)||NEWS_TYPES[0];
         const mins=tdiff(it.startTime,it.endTime)??it.manualMins??0;
         const _srch=[nt.label,it.desc||"",it.type,nt.icon||""].join(" ").toLowerCase().replace(/['"]/g,"");
-        // Gap: time between previous task's end and this task's start - shown in Today's Work view only
+        // Gap: time between previous task's end and this task's start
+        if(i>0){
+          const prev=items[i-1];
+          const gapMins=tdiff(prev.endTime,it.startTime);
+          if(gapMins!==null&&gapMins>0){
+            html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 12px;margin:4px 0;background:var(--al);border-left:3px solid var(--amber);border-radius:6px">
+              <span style="font-size:11px">⏸</span>
+              <span style="font-size:11px;font-weight:700;color:var(--amber);font-family:'JetBrains Mono'">Gap: ${fmtMin(gapMins)}</span>
+              <span style="font-size:10px;color:var(--mt)">(${prev.endTime} → ${it.startTime})</span>
+            </div>`;
+          }
+        }
+        const inMissing=!it.startTime, outMissing=!it.endTime;
         html+=`<div class="ni-item" id="nli-${i}" data-search="${_srch}">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
             <div style="width:24px;height:24px;border-radius:6px;background:${nt.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
@@ -1380,23 +1392,23 @@ function renderDailyEntry(empId, dept, dateStr, container, isAdmin){
             <button class="btn btn-d btn-sm" onclick="nleDeleteItem('${empId}','${dateStr}',${i},'${container}','${dept}')">🗑 Delete</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:1px solid var(--brd);border-radius:7px;padding:4px 8px">
-              <span style="font-size:10px;color:var(--mt);font-weight:600">IN</span>
+            <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:${inMissing?"2px solid var(--red)":"1px solid var(--brd)"};border-radius:7px;padding:4px 8px">
+              <span style="font-size:10px;font-weight:700;color:${inMissing?"var(--red)":"var(--mt)"}">IN${inMissing?' <span style="color:var(--red)">*</span>':''}</span>
               <input id="nli-st-${i}" type="time" class="inp inp-sm" value="${it.startTime||''}" style="border:none;background:transparent;padding:2px 4px;font-size:12px;width:88px"
                 onchange="nleUpdateField('${empId}','${dateStr}',${i},'startTime',this.value)"/>
               <button onclick="nleSetNow('${empId}','${dateStr}',${i},'startTime','${container}','${dept}')"
                 style="background:var(--bl);border:none;border-radius:5px;padding:2px 6px;font-size:10px;color:var(--blue);cursor:pointer;font-weight:700">Now</button>
             </div>
             <span style="color:var(--mt)">→</span>
-            <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:1px solid var(--brd);border-radius:7px;padding:4px 8px">
-              <span style="font-size:10px;color:var(--mt);font-weight:600">OUT</span>
+            <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:${outMissing?"2px solid var(--red)":"1px solid var(--brd)"};border-radius:7px;padding:4px 8px">
+              <span style="font-size:10px;font-weight:700;color:${outMissing?"var(--red)":"var(--mt)"}">OUT${outMissing?' <span style="color:var(--red)">*</span>':''}</span>
               <input id="nli-et-${i}" type="time" class="inp inp-sm" value="${it.endTime||''}" style="border:none;background:transparent;padding:2px 4px;font-size:12px;width:88px"
                 onchange="nleUpdateField('${empId}','${dateStr}',${i},'endTime',this.value)"/>
               <button onclick="nleSetNow('${empId}','${dateStr}',${i},'endTime','${container}','${dept}')"
                 style="background:var(--gl);border:none;border-radius:5px;padding:2px 6px;font-size:10px;color:var(--green);cursor:pointer;font-weight:700">Now</button>
             </div>
             ${tdiff(it.startTime,it.endTime)!==null?`<span style="font-size:12px;font-weight:700;color:var(--green);font-family:'JetBrains Mono';background:var(--gl);padding:3px 10px;border-radius:6px">⏱ ${fmtMin(tdiff(it.startTime,it.endTime))}</span>`:""}
-            <button class="btn btn-p btn-sm" onclick="nleSaveItem('${empId}','${dateStr}',${i})">💾 Save</button>
+            <button class="btn btn-p btn-sm" onclick="nleSaveItem('${empId}','${dateStr}',${i},'${container}','${dept}')">💾 Save</button>
           </div>
         </div>`;
       });
@@ -1545,9 +1557,23 @@ function nleSetNow(empId, date, idx, field, container, dept){
   renderDailyEntry(empId,dept,date,container,false);
 }
 
-async function nleSaveItem(empId, date, idx){
+async function nleSaveItem(empId, date, idx, container, dept){
   const it=DAILY[empId]?.[date]?.[idx];
   if(!it)return;
+  if(!it.startTime||!it.endTime){
+    toast("⚠️ IN and OUT time are mandatory before saving.","er");
+    if(!it.startTime){
+      const el=document.getElementById("nli-st-"+idx);
+      if(el){el.style.border="2px solid var(--red)";el.focus();}
+    }
+    if(!it.endTime){
+      const el=document.getElementById("nli-et-"+idx);
+      if(el)el.style.border="2px solid var(--red)";
+    }
+    // Re-render to show * markers
+    if(container&&dept)renderDailyEntry(empId,dept,date,container,false);
+    return;
+  }
   const ok=await sbSaveNLEItem(empId,date,it);
   if(ok)toast("✓ Saved");
 }
