@@ -1819,27 +1819,39 @@ function renderAdminScore(){
 
 function renderAdminHistory(){
   if(!ME.id){$("at-myhistory").innerHTML=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)">No employee record linked</div>`;return;}
-  const days=Object.keys(DAILY[ME.id]||{}).sort().reverse().slice(0,30);
+  const isNLE = ME.dept==="NLE Editor";
+  const src = isNLE ? DAILY[ME.id] : PROD_DAILY[ME.id];
+  const days=Object.keys(src||{}).sort().reverse().slice(0,30);
   let html=`<div class="sec-hdr"><div class="sec-title">My History</div><div class="sec-sub">Last 30 days</div></div>`;
   if(!days.length){html+=`<div class="card" style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:36px;margin-bottom:8px">📅</div>No history yet</div>`;}
   else days.forEach(d=>{
-    const items=DAILY[ME.id][d]||[];
-    const wpts=items.reduce((s,it)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};return s+nt.weight;},0);
-    const mins=items.reduce((s,it)=>s+(tdiff(it.startTime,it.endTime)??it.manualMins??0),0);
+    let label1, label2;
+    if(isNLE){
+      const items=DAILY[ME.id][d]||[];
+      const wpts=items.reduce((s,it)=>{const nt=NEWS_TYPES.find(n=>n.key===it.type)||{weight:1};return s+nt.weight;},0);
+      const mins=items.reduce((s,it)=>s+(tdiff(it.startTime,it.endTime)??it.manualMins??0),0);
+      label1=`${items.length} items · ${fmtMin(mins)}`;
+      label2=`${wpts} weighted pts`;
+    } else {
+      const fields = ME.dept==="News Producer" ? PROD_FIELDS : VO_FIELDS;
+      const pd=PROD_DAILY[ME.id][d]||{};
+      const total=fields.reduce((s,f)=>s+(parseInt(pd[f.key])||0),0);
+      label1=`${total} activities`;
+      label2=fields.filter(f=>parseInt(pd[f.key])>0).map(f=>`${f.icon}${pd[f.key]}`).join(" ")||"—";
+    }
     html+=`<div class="card-sm" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="$('a-date').value='${d}';aNav('mywork')">
       <div style="width:44px;text-align:center;flex-shrink:0">
         <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono'">${new Date(d+"T00:00").getDate()}</div>
         <div style="font-size:10px;color:var(--mt)">${new Date(d+"T00:00").toLocaleDateString("en-IN",{month:"short"})}</div>
       </div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${items.length} items · ${fmtMin(mins)}</div>
-        <div style="font-size:11px;color:var(--mt)">${wpts} weighted pts</div>
+        <div style="font-size:13px;font-weight:600">${label1}</div>
+        <div style="font-size:11px;color:var(--mt)">${label2}</div>
       </div>
     </div>`;
   });
   $("at-myhistory").innerHTML=html;
 }
-
 // ══════════════════════════════════════════════
 // ADMIN DASHBOARD
 // ══════════════════════════════════════════════
